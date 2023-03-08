@@ -67,3 +67,8 @@ after mock expectations set:
 GetCurrentProcessId: 42
 GetProcessIdOfThread: 1
 ```
+
+# Version history
+
+Version 1.0.0 (08 March 2023)
+Initial public release
