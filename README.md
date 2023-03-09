@@ -1,6 +1,12 @@
 # gmock-win32
 The library implements gmock functionality for global win32 functions.
 
+Using the mocking technique in global system functions can be a sign of a poorly designed code. It means that the code is tightly coupled and relies on a specific implementation with side-effects, making it less flexible and difficult to test. However, there are times when we need to test such code without rewriting it. Even testing such code is better than having no tests at all.
+
+To use the mock technique for win32 APIs, you need to replace the original global win32 functions with something else. In C++, this is achieved through dynamic polymorphism with virtual functions via vtable and function overloading.
+
+The Import Address Table (IAT) patching technique is a documented approach that can be used to achieve this goal. The library extends GMock library by using this technique. However, there is still a limitation - we cannot substitute a win32 function that is used by run-time dynamic linking (LoadLibrary + GetProcAddress).
+
 # Basic usage example
 
 1. Create win32 function mocks
