@@ -1,6 +1,3 @@
-# gmock-win32
-The library implements gmock functionality for global win32 functions.
-
 # Overview
 
 Suppose there is a task to test code that relies on certain system functions. Ideally, the code should be tested against different possible results of these functions. However, creating the necessary conditions for the functions to return specific results can be challenging. For instance, simulating a lack of space when writing to a file requires a lot of effort.
