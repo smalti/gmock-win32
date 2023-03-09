@@ -58,8 +58,8 @@ int main()
     cout << "before mock expectations set:" << endl;
     Foo{ }.test();
 
-    ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(testing::Return(42));
-    ON_MODULE_FUNC_CALL(GetProcessIdOfThread, testing::Eq(HANDLE(42))).WillByDefault(testing::Return(1));
+    ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
+    ON_MODULE_FUNC_CALL(GetProcessIdOfThread, Eq(HANDLE(42))).WillByDefault(Return(1));
 
     cout << endl << "after mock expectations set:" << endl;
     Foo{ }.test();
