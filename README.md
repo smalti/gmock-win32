@@ -80,3 +80,13 @@ GetProcessIdOfThread: 1
 
 Version 1.0.0 (08 March 2023)
 Initial public release
+
+# TODO
+
+- add IAT patch removing
+- add CMake and msvs solution
+- make support of gcc/intel/etc. compillers
+- implement delay-load patching
+- add MOCK_MODULE_FUNC macro (instead of MOCK_MODULE_FUNCn)
+- add support of original function call
+- add tests
