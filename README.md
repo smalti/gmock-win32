@@ -21,7 +21,7 @@ MOCK_MODULE_FUNC0_STDCALL(GetCurrentProcessId,  DWORD(void));
 MOCK_MODULE_FUNC1_STDCALL(GetProcessIdOfThread, DWORD(HANDLE));
 ```
 
-2. Setup expectations via EXPECT_MODULE_FUNC_CALL / ON_MODULE_FUNC_CALL
+2. Setup expectations via `EXPECT_MODULE_FUNC_CALL` / `ON_MODULE_FUNC_CALL`
 
 ```cpp
 ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
