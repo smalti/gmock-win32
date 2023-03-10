@@ -2,7 +2,7 @@
 
 #include <shlwapi.h>
 #include <windows.h>
-#include <DbgHelp.h>
+#include <dbghelp.h>
 
 #include <memory>
 #include <stdexcept>
@@ -30,7 +30,7 @@ namespace {
         ULONG ulSize{ };
         PIMAGE_SECTION_HEADER pFoundHeader{ };
 
-        *resultDescriptor = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(
+        *resultDescriptor = reinterpret_cast< PIMAGE_IMPORT_DESCRIPTOR >(
             ::ImageDirectoryEntryToDataEx(
                 baseAddress, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize, &pFoundHeader));
 
@@ -49,8 +49,8 @@ namespace {
 
         for (; importDescr->Name; ++importDescr)
         {
-            const auto pszModName = reinterpret_cast<PSTR>(
-                reinterpret_cast<PBYTE>(baseAddress) + importDescr->Name);
+            const auto pszModName = reinterpret_cast< PSTR >(
+                reinterpret_cast< PBYTE >(baseAddress) + importDescr->Name);
 
             if (::lstrcmpiA(pszModName, importModule) == 0)
                 break;
@@ -94,16 +94,16 @@ namespace {
         }
     }
 
-    HRESULT procModuleName(
-        const PVOID procAddr, LPSTR moduleName, DWORD moduleNameSize)
+    HRESULT funcModuleName(
+        const PVOID funcAddr, LPSTR moduleName, DWORD moduleNameSize)
     {
-        if (!procAddr || !moduleName || !moduleNameSize)
+        if (!funcAddr || !moduleName || !moduleNameSize)
             return E_INVALIDARG;
 
         HMODULE module{ };
         if (!::GetModuleHandleExA(
             GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, static_cast<LPCSTR>(procAddr), &module))
+            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, static_cast< LPCSTR >(funcAddr), &module))
         {
             return HRESULT_FROM_WIN32(::GetLastError());
         }
@@ -118,14 +118,14 @@ namespace {
         return S_OK;
     }
 
-    HRESULT patchImportProc(
-        PVOID procAddr, const PVOID newProc, PVOID* oldProc)
+    HRESULT patchImportFunc(
+        PVOID funcAddr, const PVOID newFunc, PVOID* oldFunc)
     {
-        if (!procAddr || !newProc || !oldProc)
+        if (!funcAddr || !newFunc || !oldFunc)
             return E_INVALIDARG;
 
-        CHAR moduleName[MAX_PATH] = {};
-        RETURN_IF_FAILED(procModuleName(procAddr, moduleName, MAX_PATH));
+        CHAR moduleName[MAX_PATH] = { };
+        RETURN_IF_FAILED(funcModuleName(funcAddr, moduleName, MAX_PATH));
 
         PIMAGE_THUNK_DATA32 thunkData{};
         RETURN_IF_FAILED(importModuleThunkData(
@@ -134,16 +134,16 @@ namespace {
         for (; thunkData->u1.Function; ++thunkData)
         {
             const auto ppfn =
-                reinterpret_cast<LPVOID*>(&thunkData->u1.Function);
+                reinterpret_cast< LPVOID* >(&thunkData->u1.Function);
 
-            if (*ppfn == procAddr)
+            if (*ppfn == funcAddr)
             {
                 HRESULT hRes = E_FAIL;
                 if (SUCCEEDED(hRes =
-                    writeProcessMemory(ppfn, &newProc, sizeof(ppfn))))
+                    writeProcessMemory(ppfn, &newFunc, sizeof(ppfn))))
                 {
-                    if (oldProc)
-                        *oldProc = procAddr;
+                    if (oldFunc)
+                        *oldFunc = funcAddr;
                 }
 
                 return hRes;
@@ -155,9 +155,9 @@ namespace {
 
 } // namespace
 
-void patchModuleProc(
-    void* procAddr, void* newProc, void** oldProc)
+void patchModuleFunc(
+    void* funcAddr, void* newFunc, void** oldFunc)
 {
-    if (FAILED(patchImportProc(procAddr, newProc, oldProc)))
+    if (FAILED(patchImportFunc(funcAddr, newFunc, oldFunc)))
         throw std::runtime_error{ "failed to patch module function" };
 }

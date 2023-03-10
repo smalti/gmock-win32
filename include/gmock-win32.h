@@ -7,7 +7,7 @@
 
 #ifndef GMOCK_ARG_
 #define GMOCK_ARG_(tn, N, ...) \
-    tn ::testing::internal::Function<__VA_ARGS__>::template Arg<N-1>::type
+    tn ::testing::internal::Function<__VA_ARGS__>::Argument##N
 #endif
 
 #ifndef GMOCK_MATCHER_
@@ -16,8 +16,8 @@
 #endif
 
 #ifndef GMOCK_MOCKER_
-#define GMOCK_MOCKER_(arity, Method) \
-    GTEST_CONCAT_TOKEN_(gmock##arity##_##Method##_, __LINE__)
+#define GMOCK_MOCKER_(arity, constness, func) \
+    GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##func##_, __LINE__)
 #endif
 
 #define MOCK_MODULE_FUNC0_(tn, constness, ct, func, ...) \
@@ -45,8 +45,8 @@ struct mock_module_##func \
     { \
         return mock_module_##func::instance().func(); \
     } \
-    static void* oldProc_; \
-}; void* mock_module_##func::oldProc_ = nullptr;
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
 
 #define MOCK_MODULE_FUNC0(m, ...) MOCK_MODULE_FUNC0_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC0_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC0_(, , ct, m, __VA_ARGS__)
@@ -82,8 +82,8 @@ struct mock_module_##func \
         return mock_module_##func::instance().func( \
             gmock_a1); \
     } \
-    static void* oldProc_; \
-}; void* mock_module_##func::oldProc_ = nullptr;
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
 
 #define MOCK_MODULE_FUNC1(m, ...) MOCK_MODULE_FUNC1_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC1_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC1_(, , ct, m, __VA_ARGS__)
@@ -122,8 +122,8 @@ struct mock_module_##func \
         return mock_module_##func::instance().func( \
             gmock_a1, gmock_a2); \
     } \
-    static void* oldProc_; \
-}; void* mock_module_##func::oldProc_ = nullptr;
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
 
 #define MOCK_MODULE_FUNC2(m, ...) MOCK_MODULE_FUNC2_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC2_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC2_(, , ct, m, __VA_ARGS__)
@@ -165,8 +165,8 @@ struct mock_module_##func \
         return mock_module_##func::instance().func( \
             gmock_a1, gmock_a2, gmock_a3); \
     } \
-    static void* oldProc_; \
-}; void* mock_module_##func::oldProc_ = nullptr;
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
 
 #define MOCK_MODULE_FUNC3(m, ...) MOCK_MODULE_FUNC3_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC3_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC3_(, , ct, m, __VA_ARGS__)
@@ -211,8 +211,8 @@ struct mock_module_##func \
         return mock_module_##func::instance().func( \
             gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
     } \
-    static void* oldProc_; \
-}; void* mock_module_##func::oldProc_ = nullptr;
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
 
 #define MOCK_MODULE_FUNC4(m, ...) MOCK_MODULE_FUNC4_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC4_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC4_(, , ct, m, __VA_ARGS__)
@@ -260,8 +260,8 @@ struct mock_module_##func \
         return mock_module_##func::instance().func( \
             gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5); \
     } \
-    static void* oldProc_; \
-}; void* mock_module_##func::oldProc_ = nullptr;
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
 
 #define MOCK_MODULE_FUNC5(m, ...) MOCK_MODULE_FUNC5_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC5_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC5_(, , ct, m, __VA_ARGS__)
@@ -312,8 +312,8 @@ struct mock_module_##func \
         return mock_module_##func::instance().func( \
             gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6); \
     } \
-    static void* oldProc_; \
-}; void* mock_module_##func::oldProc_ = nullptr;
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
 
 #define MOCK_MODULE_FUNC6(m, ...) MOCK_MODULE_FUNC6_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC6_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC6_(, , ct, m, __VA_ARGS__)
@@ -367,8 +367,8 @@ struct mock_module_##func \
         return mock_module_##func::instance().func( \
             gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7); \
     } \
-    static void* oldProc_; \
-}; void* mock_module_##func::oldProc_ = nullptr;
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
 
 #define MOCK_MODULE_FUNC7(m, ...) MOCK_MODULE_FUNC7_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC7_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC7_(, , ct, m, __VA_ARGS__)
@@ -425,27 +425,30 @@ struct mock_module_##func \
         return mock_module_##func::instance().func( \
             gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
     } \
-    static void* oldProc_; \
-}; void* mock_module_##func::oldProc_ = nullptr;
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
 
 #define MOCK_MODULE_FUNC8(m, ...) MOCK_MODULE_FUNC8_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC8_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC8_(, , ct, m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC8_STDCALL(m, ...) MOCK_MODULE_FUNC8_CALLCONV(__stdcall, m, __VA_ARGS__)
 
-void patchModuleProc(void*, void*, void**);
+void patchModuleFunc(void*, void*, void**);
 
 #define EXPECT_MODULE_FUNC_CALL(func, ...) \
-    if (!mock_module_##func::oldProc_) \
+    if (!mock_module_##func::oldFn_) \
     { \
-        patchModuleProc(&func, reinterpret_cast< void* >( \
-            &mock_module_##func::stub), &mock_module_##func::oldProc_); \
+        patchModuleFunc(&func, reinterpret_cast< void* >( \
+            &mock_module_##func::stub), &mock_module_##func::oldFn_); \
     } \
     EXPECT_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
 
 #define ON_MODULE_FUNC_CALL(func, ...) \
-    if (!mock_module_##func::oldProc_) \
+    if (!mock_module_##func::oldFn_) \
     { \
-        patchModuleProc(&func, reinterpret_cast< void* >( \
-            &mock_module_##func::stub), &mock_module_##func::oldProc_); \
+        patchModuleFunc(&func, reinterpret_cast< void* >( \
+            &mock_module_##func::stub), &mock_module_##func::oldFn_); \
     } \
     ON_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
+
+#define INVOKE_REAL(func, ...) \
+    reinterpret_cast< decltype(&func) >(mock_module_##func::oldFn_)(__VA_ARGS__)
