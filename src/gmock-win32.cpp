@@ -19,6 +19,11 @@ do {                                    \
 
 namespace {
 
+    LONG WINAPI InvalidReadExceptionFilter(PEXCEPTION_POINTERS /*pep*/)
+    {
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+
     HRESULT importDescriptor(
         const HMODULE baseAddress, PIMAGE_IMPORT_DESCRIPTOR* resultDescriptor)
     {
@@ -30,9 +35,17 @@ namespace {
         ULONG ulSize{ };
         PIMAGE_SECTION_HEADER pFoundHeader{ };
 
-        *resultDescriptor = reinterpret_cast< PIMAGE_IMPORT_DESCRIPTOR >(
-            ::ImageDirectoryEntryToDataEx(
-                baseAddress, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize, &pFoundHeader));
+        __try
+        {
+            *resultDescriptor = reinterpret_cast< PIMAGE_IMPORT_DESCRIPTOR >(
+                ::ImageDirectoryEntryToDataEx(
+                    baseAddress, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize, &pFoundHeader));
+        }
+        __except (InvalidReadExceptionFilter(GetExceptionInformation()))
+        {
+            // We don't patch module function in that case
+            return HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND);
+        }
 
         return *resultDescriptor ?
             S_OK : HRESULT_FROM_WIN32(::GetLastError());
@@ -127,7 +140,7 @@ namespace {
         CHAR moduleName[MAX_PATH] = { };
         RETURN_IF_FAILED(funcModuleName(funcAddr, moduleName, MAX_PATH));
 
-        PIMAGE_THUNK_DATA32 thunkData{};
+        PIMAGE_THUNK_DATA32 thunkData{ };
         RETURN_IF_FAILED(importModuleThunkData(
             ::GetModuleHandle(nullptr), moduleName, &thunkData));
 
