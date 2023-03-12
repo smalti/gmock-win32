@@ -14,7 +14,7 @@ Generally using the mocking global system functions can be a sign of poorly desi
 
 # Basic usage example
 
-1. Create win32 function mocks by using `MOCK_STDCALL_FUNC` / `MOCK_CDECL_FUNC` macrodefines (define them in global namespace)
+1. Create win32 function mocks by using `MOCK_STDCALL_FUNC` / `MOCK_CDECL_FUNC` macro by define them in global namespace. Macro syntax: MOCK_**CALLCONV**_FUNC(Retval, FunctionName, arg1, arg2...).
 
 ```cpp
 MOCK_STDCALL_FUNC(DWORD, GetCurrentProcessId);
@@ -28,7 +28,7 @@ ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
 ON_MODULE_FUNC_CALL(GetProcessIdOfThread, Eq(HANDLE(42))).WillByDefault(Return(1));
 ```
 
-3. You can use a helper macrodefine `INVOKE_REAL` to call the original function:
+3. You can use a helper macro `INVOKE_REAL` to call the original function:
 
 ```cpp
 ON_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillByDefault(Invoke([&](HANDLE handle) -> DWORD
@@ -97,7 +97,7 @@ GetProcessIdOfThread: 1
 # Version history
 
 ### Version 1.0.2 (12 March 2023)
-- Added support of MOCK_* macrodefines without specifying the argument count in name
+- Added support of MOCK_* macro without specifying the argument count in name
 
 ### Version 1.0.1 (10 March 2023)
 - Added support of delegating calls to a real function
