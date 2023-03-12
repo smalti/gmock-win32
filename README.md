@@ -14,11 +14,11 @@ Generally using the mocking global system functions can be a sign of poorly desi
 
 # Basic usage example
 
-1. Create win32 function mocks by using `MOCK_MODULE_FUNC*` macrodefines (define them in global namespace)
+1. Create win32 function mocks by using `MOCK_STDCALL_FUNC` / `MOCK_CDECL_FUNC` macrodefines (define them in global namespace)
 
 ```cpp
-MOCK_MODULE_FUNC0_STDCALL(GetCurrentProcessId,  DWORD(void));
-MOCK_MODULE_FUNC1_STDCALL(GetProcessIdOfThread, DWORD(HANDLE));
+MOCK_STDCALL_FUNC(DWORD, GetCurrentProcessId);
+MOCK_STDCALL_FUNC(DWORD, GetProcessIdOfThread, HANDLE);
 ```
 
 2. Setup expectations via `EXPECT_MODULE_FUNC_CALL` / `ON_MODULE_FUNC_CALL`
@@ -48,8 +48,8 @@ ON_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillByDefault(Invoke([&](HANDLE han
 
 using namespace std;
 
-MOCK_MODULE_FUNC0_STDCALL(GetCurrentProcessId,  DWORD(void));
-MOCK_MODULE_FUNC1_STDCALL(GetProcessIdOfThread, DWORD(HANDLE));
+MOCK_STDCALL_FUNC(DWORD, GetCurrentProcessId);
+MOCK_STDCALL_FUNC(DWORD, GetProcessIdOfThread, HANDLE);
 
 struct Foo
 {
@@ -95,6 +95,9 @@ GetProcessIdOfThread: 1
 - Compiled with Visual Studio 2015 Update3 v140 toolset
 
 # Version history
+
+### Version 1.0.2 (12 March 2023)
+- Added support of MOCK_* macrodefines without specifying the argument count in name
 
 ### Version 1.0.1 (10 March 2023)
 - Added support of delegating calls to a real function
