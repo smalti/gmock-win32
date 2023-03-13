@@ -65,7 +65,7 @@ MOCK_STDCALL_FUNC(DWORD, GetProcessIdOfThread, HANDLE);
 
 void test()
 {
-    cout << "  GetCurrentProcessId:  "  << ::GetCurrentProcessId() << endl;
+    cout << "  GetCurrentProcessId:  " << ::GetCurrentProcessId() << endl;
     cout << "  GetProcessIdOfThread: " << ::GetProcessIdOfThread(HANDLE(42)) << endl;
 }
 
