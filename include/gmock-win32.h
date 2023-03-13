@@ -466,7 +466,8 @@ struct mock_module_##func \
 #define MOCK_STDCALL_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL)##(m, r(__VA_ARGS__))
 #define MOCK_CDECL_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##__CDECL)##(m, r(__VA_ARGS__))
 
-void patchModuleFunc(void*, void*, void**);
+void patchModuleFunc   (void*, void*, void**);
+void restoreModuleFunc (void*, void*, void**);
 
 #define EXPECT_MODULE_FUNC_CALL(func, ...) \
     if (!mock_module_##func::oldFn_) \
@@ -484,5 +485,11 @@ void patchModuleFunc(void*, void*, void**);
     } \
     ON_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
 
-#define INVOKE_REAL(func, ...) \
+#define INVOKE_REAL_MODULE_FUNC(func, ...) \
     reinterpret_cast< decltype(&func) >(mock_module_##func::oldFn_)(__VA_ARGS__)
+
+#define VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(func) \
+    ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance())
+
+#define RESTORE_MODULE_FUNC(func) \
+    restoreModuleFunc(mock_module_##func::oldFn_, mock_module_##func::stub, &mock_module_##func::oldFn_)
