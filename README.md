@@ -51,7 +51,7 @@ ON_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillByDefault(Invoke([&](HANDLE han
 }));
 ```
 
-#### 4. If you need to use the mock function in multiple tests with different expectations, you can clear the previous expectations and verify them by using the VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS macro:
+#### 4. If you need to use the mock function in multiple tests with different expectations, you can clear the previous expectations and verify them by using the `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro:
 
 ```cpp
 VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(GetCurrentProcessId);
