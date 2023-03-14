@@ -27,6 +27,8 @@ MOCK_STDCALL_FUNC(DWORD, GetProcessIdOfThread, HANDLE);
 
 #### 2. Setup expectations via `EXPECT_MODULE_FUNC_CALL` / `ON_MODULE_FUNC_CALL` + use GMock matchers and actions as usual:
 
+Macro syntax: `*EXPECTATION*_MODULE_FUNC_CALL(FunctionName, matchers...)`
+
 ```cpp
 ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
 ON_MODULE_FUNC_CALL(GetProcessIdOfThread, Eq(HANDLE(42))).WillByDefault(Return(1));
