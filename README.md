@@ -141,4 +141,4 @@ After mock expectations set:
 - [ ] Verify and add support for googletest v1.10.0 / v1.12.1 / v1.13.0
 - [x] Add support of original function call
 - [x] Support IAT patching removing
-- [x] Added support of MOCK_* macro without specifying argument count
+- [x] Add support of MOCK_* macro without specifying argument count
