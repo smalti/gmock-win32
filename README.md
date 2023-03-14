@@ -86,8 +86,8 @@ int main()
     ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
     ON_MODULE_FUNC_CALL(GetProcessIdOfThread, Eq(HANDLE(42))).WillByDefault(Return(1));
 
-    // After setting up expectations, we will receive results that
-    // are faked based on our expectations:
+    // After setting up expectations, we will receive faked results that
+    // are based on our expectations:
 
     cout << endl << "After mock expectations set:" << endl;
     test();
