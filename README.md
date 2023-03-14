@@ -29,6 +29,13 @@ MOCK_STDCALL_FUNC(DWORD, GetProcessIdOfThread, HANDLE);
 
 Macro syntax: `*EXPECTATION*_MODULE_FUNC_CALL(FunctionName, matchers...)`
 
+EXPECT_MODULE_FUNC_CALL:
+```cpp
+EXPECT_MODULE_FUNC_CALL(GetCurrentProcessId).WillOnce(Return(42));
+EXPECT_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillRepeatedly(Return(42));
+```
+
+ON_MODULE_FUNC_CALL:
 ```cpp
 ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
 ON_MODULE_FUNC_CALL(GetProcessIdOfThread, Eq(HANDLE(42))).WillByDefault(Return(1));
@@ -83,7 +90,7 @@ int main()
     // Now we proceed to set up expectations (this process also
     // involves patching the real Win32 module functions):
 
-    ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
+    EXPECT_MODULE_FUNC_CALL(GetCurrentProcessId).WillRepeatedly(Return(42));
     ON_MODULE_FUNC_CALL(GetProcessIdOfThread, Eq(HANDLE(42))).WillByDefault(Return(1));
 
     // After setting up expectations, we will receive faked results that
