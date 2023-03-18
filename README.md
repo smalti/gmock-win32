@@ -116,7 +116,7 @@ After mock expectations set:
 
 # Build info
 
-- Tested with `googletest 1.8.1`
+- Tested with `googletest 1.8.1` and `googletest 1.10.0`
 - Compiled with `Visual Studio 2015` Update3 `v140 toolset` x86 / x64
 
 # Version history
@@ -138,7 +138,7 @@ After mock expectations set:
 - [ ] Add unit tests for the library
 - [ ] Make samples that show how to test Win32 C++ wrappers
 - [ ] Create CMake build configurations
-- [ ] Verify and add support for googletest v1.10.0 / v1.12.1 / v1.13.0
+- [ ] Verify and add support for googletest v1.11.0 / v1.12.1 / v1.13.0
 - [x] Add support of original function call
 - [x] Support IAT patching removing
 - [x] Add support of MOCK_* macro without specifying argument count
