@@ -202,14 +202,14 @@ namespace {
 
 } // namespace
 
-void patchModuleFunc(
+void mockModule_patchModuleFunc(
     void* funcAddr, void* newFunc, void** oldFunc)
 {
     if (FAILED(patchImportFunc(funcAddr, newFunc, oldFunc)))
         throw std::runtime_error{ "failed to patch module function" };
 }
 
-void restoreModuleFunc(void* origFunc, void* stubFunc, void** oldProc)
+void mockModule_restoreModuleFunc(void* origFunc, void* stubFunc, void** oldProc)
 {
     if (FAILED(restoreImportFunc(origFunc, stubFunc)))
         throw std::runtime_error{ "failed to restore module function" };

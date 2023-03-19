@@ -7,7 +7,7 @@
 
 #ifndef GMOCK_ARG_
 #define GMOCK_ARG_(tn, N, ...) \
-    tn ::testing::internal::Function<__VA_ARGS__>::Argument##N
+    tn ::testing::internal::Function<__VA_ARGS__>::template Arg<N-1>::type 
 #endif
 
 #ifndef GMOCK_MATCHER_
@@ -51,8 +51,8 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC0(m, ...) MOCK_MODULE_FUNC0_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC0_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC0_(, , ct, m, __VA_ARGS__)
 
-#define MOCK_MODULE_FUNC0_STDCALL(m, ...) MOCK_MODULE_FUNC0_CALLCONV(__stdcall, m, __VA_ARGS__)
-#define MOCK_MODULE_FUNC0_CDECL(m, ...) MOCK_MODULE_FUNC0_CALLCONV(__cdecl, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC0_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC0_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC0_CDECL_CONV(m, ...) MOCK_MODULE_FUNC0_CALLCONV(__cdecl, m, __VA_ARGS__)
 
 #define MOCK_MODULE_FUNC1_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
@@ -90,8 +90,8 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC1(m, ...) MOCK_MODULE_FUNC1_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC1_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC1_(, , ct, m, __VA_ARGS__)
 
-#define MOCK_MODULE_FUNC1_STDCALL(m, ...) MOCK_MODULE_FUNC1_CALLCONV(__stdcall, m, __VA_ARGS__)
-#define MOCK_MODULE_FUNC1_CDECL(m, ...) MOCK_MODULE_FUNC1_CALLCONV(__cdecl, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC1_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC1_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC1_CDECL_CONV(m, ...) MOCK_MODULE_FUNC1_CALLCONV(__cdecl, m, __VA_ARGS__)
 
 #define MOCK_MODULE_FUNC2_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
@@ -132,8 +132,8 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC2(m, ...) MOCK_MODULE_FUNC2_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC2_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC2_(, , ct, m, __VA_ARGS__)
 
-#define MOCK_MODULE_FUNC2_STDCALL(m, ...) MOCK_MODULE_FUNC2_CALLCONV(__stdcall, m, __VA_ARGS__)
-#define MOCK_MODULE_FUNC2_CDECL(m, ...) MOCK_MODULE_FUNC2_CALLCONV(__cdecl, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC2_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC2_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC2_CDECL_CONV(m, ...) MOCK_MODULE_FUNC2_CALLCONV(__cdecl, m, __VA_ARGS__)
 
 #define MOCK_MODULE_FUNC3_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
@@ -177,8 +177,8 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC3(m, ...) MOCK_MODULE_FUNC3_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC3_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC3_(, , ct, m, __VA_ARGS__)
 
-#define MOCK_MODULE_FUNC3_STDCALL(m, ...) MOCK_MODULE_FUNC3_CALLCONV(__stdcall, m, __VA_ARGS__)
-#define MOCK_MODULE_FUNC3_CDECL(m, ...) MOCK_MODULE_FUNC3_CALLCONV(__cdecl, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC3_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC3_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC3_CDECL_CONV(m, ...) MOCK_MODULE_FUNC3_CALLCONV(__cdecl, m, __VA_ARGS__)
 
 #define MOCK_MODULE_FUNC4_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
@@ -225,8 +225,8 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC4(m, ...) MOCK_MODULE_FUNC4_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC4_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC4_(, , ct, m, __VA_ARGS__)
 
-#define MOCK_MODULE_FUNC4_STDCALL(m, ...) MOCK_MODULE_FUNC4_CALLCONV(__stdcall, m, __VA_ARGS__)
-#define MOCK_MODULE_FUNC4_CDECL(m, ...) MOCK_MODULE_FUNC4_CALLCONV(__cdecl, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC4_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC4_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC4_CDECL_CONV(m, ...) MOCK_MODULE_FUNC4_CALLCONV(__cdecl, m, __VA_ARGS__)
 
 #define MOCK_MODULE_FUNC5_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
@@ -276,8 +276,8 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC5(m, ...) MOCK_MODULE_FUNC5_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC5_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC5_(, , ct, m, __VA_ARGS__)
 
-#define MOCK_MODULE_FUNC5_STDCALL(m, ...) MOCK_MODULE_FUNC5_CALLCONV(__stdcall, m, __VA_ARGS__)
-#define MOCK_MODULE_FUNC5_CDECL(m, ...) MOCK_MODULE_FUNC5_CALLCONV(__cdecl, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC5_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC5_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC5_CDECL_CONV(m, ...) MOCK_MODULE_FUNC5_CALLCONV(__cdecl, m, __VA_ARGS__)
 
 #define MOCK_MODULE_FUNC6_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
@@ -330,8 +330,8 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC6(m, ...) MOCK_MODULE_FUNC6_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC6_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC6_(, , ct, m, __VA_ARGS__)
 
-#define MOCK_MODULE_FUNC6_STDCALL(m, ...) MOCK_MODULE_FUNC6_CALLCONV(__stdcall, m, __VA_ARGS__)
-#define MOCK_MODULE_FUNC6_CDECL(m, ...) MOCK_MODULE_FUNC6_CALLCONV(__cdecl, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC6_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC6_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC6_CDECL_CONV(m, ...) MOCK_MODULE_FUNC6_CALLCONV(__cdecl, m, __VA_ARGS__)
 
 #define MOCK_MODULE_FUNC7_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
@@ -387,8 +387,8 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC7(m, ...) MOCK_MODULE_FUNC7_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC7_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC7_(, , ct, m, __VA_ARGS__)
 
-#define MOCK_MODULE_FUNC7_STDCALL(m, ...) MOCK_MODULE_FUNC7_CALLCONV(__stdcall, m, __VA_ARGS__)
-#define MOCK_MODULE_FUNC7_CDECL(m, ...) MOCK_MODULE_FUNC7_CALLCONV(__cdecl, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC7_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC7_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC7_CDECL_CONV(m, ...) MOCK_MODULE_FUNC7_CALLCONV(__cdecl, m, __VA_ARGS__)
 
 #define MOCK_MODULE_FUNC8_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
@@ -447,8 +447,8 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC8(m, ...) MOCK_MODULE_FUNC8_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC8_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC8_(, , ct, m, __VA_ARGS__)
 
-#define MOCK_MODULE_FUNC8_STDCALL(m, ...) MOCK_MODULE_FUNC8_CALLCONV(__stdcall, m, __VA_ARGS__)
-#define MOCK_MODULE_FUNC8_CDECL(m, ...) MOCK_MODULE_FUNC8_CALLCONV(__cdecl, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC8_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC8_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC8_CDECL_CONV(m, ...) MOCK_MODULE_FUNC8_CALLCONV(__cdecl, m, __VA_ARGS__)
 
 #define MOCK_MODULE_EXPAND(x) x
 #define MOCK_MODULE_UNITE(x, y) x y
@@ -463,16 +463,16 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC_OVERLOAD(name, ...) MOCK_MODULE_UNITE(MOCK_MODULE_OVERLOAD(name, MOCK_MODULE_NBARG(__VA_ARGS__)), (__VA_ARGS__))
 #define MOCK_MODULE_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__))##(m, r(__VA_ARGS__))
 
-#define MOCK_STDCALL_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL)##(m, r(__VA_ARGS__))
-#define MOCK_CDECL_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##__CDECL)##(m, r(__VA_ARGS__))
+#define MOCK_STDCALL_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL_CONV)##(m, r(__VA_ARGS__))
+#define MOCK_CDECL_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##__CDECL_CONV)##(m, r(__VA_ARGS__))
 
-void patchModuleFunc   (void*, void*, void**);
-void restoreModuleFunc (void*, void*, void**);
+void mockModule_patchModuleFunc   (void*, void*, void**);
+void mockModule_restoreModuleFunc (void*, void*, void**);
 
 #define EXPECT_MODULE_FUNC_CALL(func, ...) \
     if (!mock_module_##func::oldFn_) \
     { \
-        patchModuleFunc(&func, reinterpret_cast< void* >( \
+        mockModule_patchModuleFunc(&func, reinterpret_cast< void* >( \
             &mock_module_##func::stub), &mock_module_##func::oldFn_); \
     } \
     EXPECT_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
@@ -480,7 +480,7 @@ void restoreModuleFunc (void*, void*, void**);
 #define ON_MODULE_FUNC_CALL(func, ...) \
     if (!mock_module_##func::oldFn_) \
     { \
-        patchModuleFunc(&func, reinterpret_cast< void* >( \
+        mockModule_patchModuleFunc(&func, reinterpret_cast< void* >( \
             &mock_module_##func::stub), &mock_module_##func::oldFn_); \
     } \
     ON_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
@@ -492,4 +492,4 @@ void restoreModuleFunc (void*, void*, void**);
     ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance())
 
 #define RESTORE_MODULE_FUNC(func) \
-    restoreModuleFunc(mock_module_##func::oldFn_, mock_module_##func::stub, &mock_module_##func::oldFn_)
+    mockModule_restoreModuleFunc(mock_module_##func::oldFn_, mock_module_##func::stub, &mock_module_##func::oldFn_)
