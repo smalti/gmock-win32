@@ -8,7 +8,7 @@ To simplify this process, this library allows you to replace imported module fun
 
 To use the mock technique for Win32 APIs, you need to replace the original global Win32 functions with something else. In C++, this is achieved through dynamic polymorphism with virtual functions via vtable and function overloading.
 
-The `Import Address Table` (IAT) patching technique is a documented approach that can be used to achieve this goal. The library extends GMock library by using this technique. However, there is still a limitation - we cannot substitute a Win32 function that is used by run-time dynamic linking (`LoadLibrary` + `GetProcAddress`).
+The `Import Address Table` (IAT) patching technique is a documented approach that can be used to achieve this goal. The library extends GMock library by using this technique. However, there is still a limitation - we cannot substitute a Win32 function that is used by run-time dynamic linking (`LoadLibrary` + `GetProcAddress`). You can find several GMock library extensions on GitHub, each with its own unique approach. The current implementation was inspired by a header-only library called [gmock-global](https://github.com/apriorit/gmock-global).
 
 Generally using the mocking global system functions can be a sign of poorly designed code. It means that the code is tightly coupled with the system and relies on a specific implementation with side effects, making it less flexible and difficult to test. But sometimes, it may not be feasible to rewrite existing code before testing it, perhaps due to time constraints or other reasons (thin system wrappers, vtable overhead, etc.). In such cases, it's still better to test the code in its current form rather than having no tests at all.
 
