@@ -116,7 +116,12 @@ After mock expectations set:
 
 # Build info
 
-- Tested with `googletest 1.8.1`, `googletest 1.10.0`, `googletest 1.11.0`, `googletest 1.12.1`, `googletest 1.13.0`
+- Tested with:
+    * `googletest 1.8.1`
+    * `googletest 1.10.0`
+    * `googletest 1.11.0`
+    * `googletest 1.12.1`
+    * `googletest 1.13.0`
 - Compiled with `Visual Studio 2015` Update3 `v140 toolset` x86 / x64
 
 # Version history
