@@ -141,12 +141,3 @@ After mock expectations set:
 
 ### Version 1.0.0 (08 March 2023)
 - Initial public release
-
-### TODO:
-- [ ] Add unit tests for the library
-- [ ] Make samples that show how to test Win32 C++ wrappers
-- [ ] Create CMake build configurations
-- [x] Verify and add support for googletest v1.11.0 / v1.12.1 / v1.13.0
-- [x] Add support of original function call
-- [x] Support IAT patching removing
-- [x] Add support of MOCK_* macro without specifying argument count
