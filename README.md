@@ -124,6 +124,10 @@ After mock expectations set:
     * `googletest 1.13.0`
 - Compiled with `Visual Studio 2015` Update3 `v140 toolset` x86 / x64
 
+# Related Open Source Projects
+
+[GoogleTest](https://github.com/google/googletest)
+
 # Version history
 
 ### Version 1.0.4 (19 March 2023)
