@@ -375,7 +375,7 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
         GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
         GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
-        GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6) \
+        GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
         GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7) \
     { \
         return mock_module_##func::instance().func( \
@@ -434,8 +434,8 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
         GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
         GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
-        GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6) \
-        GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7) \
+        GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
+        GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
         GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8) \
     { \
         return mock_module_##func::instance().func( \
