@@ -623,8 +623,11 @@ void mockModule_restoreModuleFunc (void*, void*, void**);
     } \
     ON_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
 
+#define REAL_MODULE_FUNC(func) \
+    reinterpret_cast< decltype(&func) >(mock_module_##func::oldFn_)
+
 #define INVOKE_REAL_MODULE_FUNC(func, ...) \
-    reinterpret_cast< decltype(&func) >(mock_module_##func::oldFn_)(__VA_ARGS__)
+    REAL_MODULE_FUNC(func)(__VA_ARGS__)
 
 #define VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(func) \
     ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance())
