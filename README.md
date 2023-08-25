@@ -51,6 +51,15 @@ ON_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillByDefault(Invoke([&](HANDLE han
 }));
 ```
 
+##### 3a. You can also use the `REAL_MODULE_FUNC` macro to get a reference to the original function without calling it:
+
+This can be useful to create a mock that calls through to the real function, but is still instrumented.
+
+```cpp
+ON_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillByDefault(Invoke(REAL_MODULE_FUNC(GetProcessIdOfThread)));
+EXPECT_MODULE_FUNC_CALL(GetProcessIdOfThread, _).Times(1);
+```
+
 #### 4. If you need to use the mock function in multiple tests with different expectations, you can clear the previous expectations and verify them by using the `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro:
 
 ```cpp
