@@ -51,7 +51,7 @@ ON_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillByDefault(Invoke([&](HANDLE han
 }));
 ```
 
-### 3a. You can also use the `REAL_MODULE_FUNC` macro to get a reference to the original function without calling it:
+##### 3a. You can also use the `REAL_MODULE_FUNC` macro to get a reference to the original function without calling it:
 
 This can be useful to create a mock that calls through to the real function, but is still instrumented.
 
