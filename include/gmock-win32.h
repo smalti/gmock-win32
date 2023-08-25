@@ -513,6 +513,213 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC9_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC9_CALLCONV(__stdcall, m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC9_CDECL_CONV(m, ...) MOCK_MODULE_FUNC9_CALLCONV(__cdecl, m, __VA_ARGS__)
 
+#define MOCK_MODULE_FUNC10_(tn, constness, ct, func, ...) \
+struct mock_module_##func \
+{ \
+    GMOCK_RESULT_(tn, __VA_ARGS__) ct func( \
+        GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1, \
+        GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2, \
+        GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
+        GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
+        GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
+        GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
+        GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
+        GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8, \
+        GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9, \
+        GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10) constness \
+    { \
+        GMOCK_MOCKER_(10, constness, func).SetOwnerAndName(this, #func); \
+        return GMOCK_MOCKER_(10, constness, func).Invoke( \
+            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
+    } \
+    ::testing::MockSpec<__VA_ARGS__> gmock_##func( \
+        GMOCK_MATCHER_(tn, 1, __VA_ARGS__) gmock_a1, \
+        GMOCK_MATCHER_(tn, 2, __VA_ARGS__) gmock_a2, \
+        GMOCK_MATCHER_(tn, 3, __VA_ARGS__) gmock_a3, \
+        GMOCK_MATCHER_(tn, 4, __VA_ARGS__) gmock_a4, \
+        GMOCK_MATCHER_(tn, 5, __VA_ARGS__) gmock_a5, \
+        GMOCK_MATCHER_(tn, 6, __VA_ARGS__) gmock_a6, \
+        GMOCK_MATCHER_(tn, 7, __VA_ARGS__) gmock_a7, \
+        GMOCK_MATCHER_(tn, 8, __VA_ARGS__) gmock_a8, \
+        GMOCK_MATCHER_(tn, 9, __VA_ARGS__) gmock_a9, \
+        GMOCK_MATCHER_(tn, 10, __VA_ARGS__) gmock_a10) constness \
+    { \
+        GMOCK_MOCKER_(10, constness, func).RegisterOwner(this); \
+        return GMOCK_MOCKER_(10, constness, func).With( \
+            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
+    } \
+    mutable ::testing::FunctionMocker<__VA_ARGS__> \
+        GMOCK_MOCKER_(10, constness, func); \
+    static mock_module_##func& instance() \
+    { \
+        static ::testing::NiceMock< mock_module_##func > obj; \
+        return obj; \
+    } \
+    static GMOCK_RESULT_(tn, __VA_ARGS__) ct stub( \
+        GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1, \
+        GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2, \
+        GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
+        GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
+        GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
+        GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
+        GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
+        GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8, \
+        GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9, \
+        GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10) \
+    { \
+        return mock_module_##func::instance().func( \
+            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
+    } \
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
+
+#define MOCK_MODULE_FUNC10(m, ...) MOCK_MODULE_FUNC10_(, , , m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC10_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC10_(, , ct, m, __VA_ARGS__)
+
+#define MOCK_MODULE_FUNC10_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC10_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC10_CDECL_CONV(m, ...) MOCK_MODULE_FUNC10_CALLCONV(__cdecl, m, __VA_ARGS__)
+
+#define MOCK_MODULE_FUNC11_(tn, constness, ct, func, ...) \
+struct mock_module_##func \
+{ \
+    GMOCK_RESULT_(tn, __VA_ARGS__) ct func( \
+        GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1, \
+        GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2, \
+        GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
+        GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
+        GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
+        GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
+        GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
+        GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8, \
+        GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9, \
+        GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10, \
+        GMOCK_ARG_(tn, 11, __VA_ARGS__) gmock_a11) constness \
+    { \
+        GMOCK_MOCKER_(11, constness, func).SetOwnerAndName(this, #func); \
+        return GMOCK_MOCKER_(11, constness, func).Invoke( \
+            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11); \
+    } \
+    ::testing::MockSpec<__VA_ARGS__> gmock_##func( \
+        GMOCK_MATCHER_(tn, 1, __VA_ARGS__) gmock_a1, \
+        GMOCK_MATCHER_(tn, 2, __VA_ARGS__) gmock_a2, \
+        GMOCK_MATCHER_(tn, 3, __VA_ARGS__) gmock_a3, \
+        GMOCK_MATCHER_(tn, 4, __VA_ARGS__) gmock_a4, \
+        GMOCK_MATCHER_(tn, 5, __VA_ARGS__) gmock_a5, \
+        GMOCK_MATCHER_(tn, 6, __VA_ARGS__) gmock_a6, \
+        GMOCK_MATCHER_(tn, 7, __VA_ARGS__) gmock_a7, \
+        GMOCK_MATCHER_(tn, 8, __VA_ARGS__) gmock_a8, \
+        GMOCK_MATCHER_(tn, 9, __VA_ARGS__) gmock_a9, \
+        GMOCK_MATCHER_(tn, 10, __VA_ARGS__) gmock_a10, \
+        GMOCK_MATCHER_(tn, 11, __VA_ARGS__) gmock_a11) constness \
+    { \
+        GMOCK_MOCKER_(11, constness, func).RegisterOwner(this); \
+        return GMOCK_MOCKER_(11, constness, func).With( \
+            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11); \
+    } \
+    mutable ::testing::FunctionMocker<__VA_ARGS__> \
+        GMOCK_MOCKER_(11, constness, func); \
+    static mock_module_##func& instance() \
+    { \
+        static ::testing::NiceMock< mock_module_##func > obj; \
+        return obj; \
+    } \
+    static GMOCK_RESULT_(tn, __VA_ARGS__) ct stub( \
+        GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1, \
+        GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2, \
+        GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
+        GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
+        GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
+        GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
+        GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
+        GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8, \
+        GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9, \
+        GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10, \
+        GMOCK_ARG_(tn, 11, __VA_ARGS__) gmock_a11) \
+    { \
+        return mock_module_##func::instance().func( \
+            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11); \
+    } \
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
+
+#define MOCK_MODULE_FUNC11(m, ...) MOCK_MODULE_FUNC11_(, , , m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC11_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC11_(, , ct, m, __VA_ARGS__)
+
+#define MOCK_MODULE_FUNC11_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC11_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC11_CDECL_CONV(m, ...) MOCK_MODULE_FUNC11_CALLCONV(__cdecl, m, __VA_ARGS__)
+
+#define MOCK_MODULE_FUNC12_(tn, constness, ct, func, ...) \
+struct mock_module_##func \
+{ \
+    GMOCK_RESULT_(tn, __VA_ARGS__) ct func( \
+        GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1, \
+        GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2, \
+        GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
+        GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
+        GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
+        GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
+        GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
+        GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8, \
+        GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9, \
+        GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10, \
+        GMOCK_ARG_(tn, 11, __VA_ARGS__) gmock_a11, \
+        GMOCK_ARG_(tn, 12, __VA_ARGS__) gmock_a12) constness \
+    { \
+        GMOCK_MOCKER_(12, constness, func).SetOwnerAndName(this, #func); \
+        return GMOCK_MOCKER_(12, constness, func).Invoke( \
+            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12); \
+    } \
+    ::testing::MockSpec<__VA_ARGS__> gmock_##func( \
+        GMOCK_MATCHER_(tn, 1, __VA_ARGS__) gmock_a1, \
+        GMOCK_MATCHER_(tn, 2, __VA_ARGS__) gmock_a2, \
+        GMOCK_MATCHER_(tn, 3, __VA_ARGS__) gmock_a3, \
+        GMOCK_MATCHER_(tn, 4, __VA_ARGS__) gmock_a4, \
+        GMOCK_MATCHER_(tn, 5, __VA_ARGS__) gmock_a5, \
+        GMOCK_MATCHER_(tn, 6, __VA_ARGS__) gmock_a6, \
+        GMOCK_MATCHER_(tn, 7, __VA_ARGS__) gmock_a7, \
+        GMOCK_MATCHER_(tn, 8, __VA_ARGS__) gmock_a8, \
+        GMOCK_MATCHER_(tn, 9, __VA_ARGS__) gmock_a9, \
+        GMOCK_MATCHER_(tn, 10, __VA_ARGS__) gmock_a10, \
+        GMOCK_MATCHER_(tn, 11, __VA_ARGS__) gmock_a11, \
+        GMOCK_MATCHER_(tn, 12, __VA_ARGS__) gmock_a12) constness \
+    { \
+        GMOCK_MOCKER_(11, constness, func).RegisterOwner(this); \
+        return GMOCK_MOCKER_(11, constness, func).With( \
+            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12); \
+    } \
+    mutable ::testing::FunctionMocker<__VA_ARGS__> \
+        GMOCK_MOCKER_(12, constness, func); \
+    static mock_module_##func& instance() \
+    { \
+        static ::testing::NiceMock< mock_module_##func > obj; \
+        return obj; \
+    } \
+    static GMOCK_RESULT_(tn, __VA_ARGS__) ct stub( \
+        GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1, \
+        GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2, \
+        GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
+        GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
+        GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
+        GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
+        GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
+        GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8, \
+        GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9, \
+        GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10, \
+        GMOCK_ARG_(tn, 11, __VA_ARGS__) gmock_a11, \
+        GMOCK_ARG_(tn, 12, __VA_ARGS__) gmock_a12) \
+    { \
+        return mock_module_##func::instance().func( \
+            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12); \
+    } \
+    static void* oldFn_; \
+}; void* mock_module_##func::oldFn_ = nullptr;
+
+#define MOCK_MODULE_FUNC12(m, ...) MOCK_MODULE_FUNC12_(, , , m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC12_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC12_(, , ct, m, __VA_ARGS__)
+
+#define MOCK_MODULE_FUNC12_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC12_CALLCONV(__stdcall, m, __VA_ARGS__)
+#define MOCK_MODULE_FUNC12_CDECL_CONV(m, ...) MOCK_MODULE_FUNC12_CALLCONV(__cdecl, m, __VA_ARGS__)
+
 #define MOCK_MODULE_FUNC13_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
 { \
