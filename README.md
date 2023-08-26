@@ -131,7 +131,9 @@ After mock expectations set:
     * `googletest 1.11.0`
     * `googletest 1.12.1`
     * `googletest 1.13.0`
+    * `googletest 1.14.0`
 - Compiled with `Visual Studio 2015` Update3 `v140 toolset` x86 / x64
+- Microsoft Windows Version: 10.0.19045.3324
 
 # Related Open Source Projects
 
