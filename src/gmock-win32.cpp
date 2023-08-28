@@ -1,6 +1,5 @@
 #include "gmock-win32.h"
 
-#include <shlwapi.h>
 #include <windows.h>
 
 #pragma warning(push)
@@ -12,7 +11,6 @@
 #include <stdexcept>
 
 #pragma comment(lib, "dbghelp.lib")
-#pragma comment(lib, "shlwapi.lib")
 
 #define RETURN_IF_FAILED(hr)            \
 do {                                    \
@@ -29,9 +27,9 @@ namespace {
     }
 
     HRESULT importDescriptor(
-        const HMODULE baseAddress, PIMAGE_IMPORT_DESCRIPTOR* resultDescriptor)
+        const HMODULE base, PIMAGE_IMPORT_DESCRIPTOR* const resultDescriptor) noexcept
     {
-        if (!baseAddress || !resultDescriptor)
+        if (!base || !resultDescriptor)
             return E_INVALIDARG;
 
         *resultDescriptor = nullptr;
@@ -43,7 +41,7 @@ namespace {
         {
             *resultDescriptor = reinterpret_cast< PIMAGE_IMPORT_DESCRIPTOR >(
                 ::ImageDirectoryEntryToDataEx(
-                    baseAddress, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize, &pFoundHeader));
+                    base, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize, &pFoundHeader));
         }
         __except (InvalidReadExceptionFilter(GetExceptionInformation()))
         {
@@ -55,73 +53,15 @@ namespace {
             S_OK : HRESULT_FROM_WIN32(::GetLastError());
     }
 
-    HRESULT funcModuleName(
-        const PVOID funcAddr, LPSTR moduleName, DWORD moduleNameSize)
-    {
-        if (!funcAddr || !moduleName || !moduleNameSize)
-            return E_INVALIDARG;
-
-        HMODULE module{ };
-        if (!::GetModuleHandleExA(
-            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, static_cast< LPCSTR >(funcAddr), &module))
-        {
-            return HRESULT_FROM_WIN32(::GetLastError());
-        }
-
-        CHAR modulePath[MAX_PATH] = { };
-        if (!::GetModuleFileNameA(module, modulePath, MAX_PATH))
-            return HRESULT_FROM_WIN32(::GetLastError());
-
-        if (::strcpy_s(moduleName, moduleNameSize, ::PathFindFileNameA(modulePath)))
-            return E_NOT_SUFFICIENT_BUFFER;
-
-        return S_OK;
-    }
-
-    HRESULT importModuleThunkData(
-        const HMODULE baseAddress, const LPCSTR importModule, PIMAGE_THUNK_DATA32* thunkData)
-    {
-        if (!baseAddress || !importModule || !thunkData)
-            return E_INVALIDARG;
-
-        PIMAGE_IMPORT_DESCRIPTOR importDescr{ };
-        RETURN_IF_FAILED(importDescriptor(baseAddress, &importDescr));
-
-        for (; importDescr->Name; ++importDescr)
-        {
-            const auto pszModName = reinterpret_cast< PSTR >(
-                reinterpret_cast< PBYTE >(baseAddress) + importDescr->Name);
-
-            if (::lstrcmpiA(pszModName, importModule) == 0)
-                break;
-        }
-
-        if (!importDescr->Name)
-            return HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND);
-
-        *thunkData = reinterpret_cast< PIMAGE_THUNK_DATA32 >(
-            reinterpret_cast< PBYTE >(baseAddress) + importDescr->FirstThunk);
-
-        return S_OK;
-    }
-
-    HRESULT importModuleThunkDataFromAddress(
-        const HMODULE baseAddress, PVOID funcAddr, PIMAGE_THUNK_DATA32* thunkData)
-    {
-        if (!baseAddress || !funcAddr || !thunkData)
-            return E_INVALIDARG;
-
-        CHAR moduleName[MAX_PATH] = { };
-        RETURN_IF_FAILED(funcModuleName(funcAddr, moduleName, MAX_PATH));
-
-        return importModuleThunkData(baseAddress, moduleName, thunkData);
-    }
-
     HRESULT writeProcessMemory(
-        const LPVOID address, const LPCVOID buffer, const size_t size)
+        const LPVOID address, const LPCVOID buffer, const size_t size) noexcept
     {
-        if (::WriteProcessMemory(::GetCurrentProcess(), address, buffer, size, nullptr) == 0
+        if (!address || !buffer)
+            return E_INVALIDARG;
+
+        const auto processHandle = ::GetCurrentProcess();
+
+        if (::WriteProcessMemory(processHandle, address, buffer, size, nullptr) == 0
             && (ERROR_NOACCESS == ::GetLastError()))
         {
             DWORD oldProtect{ };
@@ -131,7 +71,7 @@ namespace {
                     ::VirtualProtect(address, size, oldProtect, &oldProtect);
                 });
 
-                if (!::WriteProcessMemory(::GetCurrentProcess(), address, buffer, size, nullptr))
+                if (!::WriteProcessMemory(processHandle, address, buffer, size, nullptr))
                     return HRESULT_FROM_WIN32(::GetLastError());
 
                 return S_OK;
@@ -147,57 +87,74 @@ namespace {
         }
     }
 
-    HRESULT patchImportFunc(
-        PVOID funcAddr, const PVOID newFunc, PVOID* oldFunc)
+    PIMAGE_THUNK_DATA32 thunkData(
+        const HMODULE base, const PIMAGE_IMPORT_DESCRIPTOR descr) noexcept
     {
-        if (!funcAddr || !newFunc || !oldFunc)
+        return reinterpret_cast< PIMAGE_THUNK_DATA32 >(
+            reinterpret_cast< PBYTE >(base) + descr->FirstThunk);
+    }
+
+    LPVOID* thunkProc(const PIMAGE_THUNK_DATA32 data) noexcept
+    {
+        return reinterpret_cast< LPVOID* >(&data->u1.Function);
+    }
+
+    HRESULT findImportProc(
+        const HMODULE base, const PVOID funcAddr, LPVOID** ppfn) noexcept
+    {
+        if (!base || !funcAddr || !ppfn)
             return E_INVALIDARG;
 
-        PIMAGE_THUNK_DATA32 thunkData{ };
-        RETURN_IF_FAILED(importModuleThunkDataFromAddress(
-            ::GetModuleHandle(nullptr), funcAddr, &thunkData));
+        PIMAGE_IMPORT_DESCRIPTOR descr{ };
+        RETURN_IF_FAILED(importDescriptor(base, &descr));
 
-        for (; thunkData->u1.Function; ++thunkData)
+        for (; descr->Name; ++descr)
         {
-            const auto ppfn =
-                reinterpret_cast< LPVOID* >(&thunkData->u1.Function);
-
-            if (*ppfn == funcAddr)
+            for (auto data = thunkData(base, descr); data->u1.Function; ++data)
             {
-                HRESULT hRes = E_FAIL;
-                if (SUCCEEDED(hRes =
-                    writeProcessMemory(ppfn, &newFunc, sizeof(ppfn))))
+                if (const auto proc = thunkProc(data))
                 {
-                    if (oldFunc)
-                        *oldFunc = funcAddr;
+                    if (*proc == funcAddr)
+                    {
+                        *ppfn = proc;
+                        return S_OK;
+                    }
                 }
-
-                return hRes;
             }
         }
 
         return HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
     }
 
-    HRESULT restoreImportFunc(PVOID origFunc, const PVOID stubFunc)
+    HRESULT patchImportFunc(
+        const PVOID funcAddr, const PVOID newFunc, PVOID* oldFunc) noexcept
+    {
+        if (!newFunc || !funcAddr || !oldFunc)
+            return E_INVALIDARG;
+
+        LPVOID* ppfn = nullptr;
+        RETURN_IF_FAILED(
+            findImportProc(::GetModuleHandle(nullptr), funcAddr, &ppfn));
+
+        RETURN_IF_FAILED(
+            writeProcessMemory(ppfn, &newFunc, sizeof(ppfn)));
+
+        if (oldFunc)
+            *oldFunc = funcAddr;
+
+        return S_OK;
+    }
+
+    HRESULT restoreImportFunc(const PVOID origFunc, const PVOID stubFunc) noexcept
     {
         if (!origFunc || !stubFunc)
             return E_INVALIDARG;
 
-        PIMAGE_THUNK_DATA32 thunkData{ };
-        RETURN_IF_FAILED(importModuleThunkDataFromAddress(
-            ::GetModuleHandle(nullptr), origFunc, &thunkData));
+        LPVOID* ppfn = nullptr;
+        RETURN_IF_FAILED(
+            findImportProc(::GetModuleHandle(nullptr), stubFunc, &ppfn));
 
-        for (; thunkData->u1.Function; ++thunkData)
-        {
-            const auto ppfn =
-                reinterpret_cast< LPVOID* >(&thunkData->u1.Function);
-
-            if (*ppfn == stubFunc)
-                return writeProcessMemory(ppfn, &origFunc, sizeof(ppfn));
-        }
-
-        return HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
+        return writeProcessMemory(ppfn, &origFunc, sizeof(ppfn));
     }
 
 } // namespace
@@ -209,11 +166,12 @@ void mockModule_patchModuleFunc(
         throw std::runtime_error{ "failed to patch module function" };
 }
 
-void mockModule_restoreModuleFunc(void* origFunc, void* stubFunc, void** oldProc)
+void mockModule_restoreModuleFunc(
+    void* origFunc, void* stubFunc, void** oldFunc)
 {
     if (FAILED(restoreImportFunc(origFunc, stubFunc)))
         throw std::runtime_error{ "failed to restore module function" };
 
-    if (oldProc)
-        *oldProc = nullptr;
+    if (oldFunc)
+        *oldFunc = nullptr;
 }
