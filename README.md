@@ -135,6 +135,10 @@ After mock expectations set:
 - Compiled with `Visual Studio 2015` Update3 `v140 toolset` x86 / x64
 - Microsoft Windows Version: 10.0.19045.3324
 
+# Samples
+
+Here are some examples of library usage: [gmock-win32-sample](https://github.com/smalti/gmock-win32-sample)
+
 # Related Open Source Projects
 
 [GoogleTest](https://github.com/google/googletest)
