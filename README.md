@@ -145,10 +145,12 @@ Here are some examples of library usage: [gmock-win32-sample](https://github.com
 
 # Version history
 
-### Version 1.1.0 (29 August 2023)
+## Version 1.1.0 (29 August 2023)
 - Added support for functions with 9-13 parameters
-- Added REAL_MODULE_FUNC macro
+- Added `REAL_MODULE_FUNC` macro
 - Fixed problem with Windows ApiSet DLL functions redirection
+
+## Old versions:
 
 ### Version 1.0.4 (19 March 2023)
 - Added support for googletest v1.11.0 / v1.12.1 / v1.13.0
