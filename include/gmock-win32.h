@@ -55,8 +55,16 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC0_CDECL_CONV(m, ...) MOCK_MODULE_FUNC0_CALLCONV(__cdecl, m, __VA_ARGS__)
 
 #define MOCK_MODULE_FUNC1_(tn, constness, ct, func, ...) \
+_Pragma( "optimize( \"\", off )" ) \
 struct mock_module_##func \
 { \
+    static void hideCodeFromOptimizer() { \
+		if (!mock_module_##func::oldFn_) \
+			mockModule_patchModuleFunc( \
+				  &::func \
+				, reinterpret_cast< void* >( &mock_module_##func::stub ) \
+				, &mock_module_##func::oldFn_); \
+	} \
     GMOCK_RESULT_(tn, __VA_ARGS__) ct func( \
         GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1) constness \
     { \
@@ -85,7 +93,8 @@ struct mock_module_##func \
             gmock_a1); \
     } \
     static void* oldFn_; \
-}; void* mock_module_##func::oldFn_ = nullptr;
+}; void* mock_module_##func::oldFn_ = nullptr; \
+_Pragma( "optimize( \"\", on )" )
 
 #define MOCK_MODULE_FUNC1(m, ...) MOCK_MODULE_FUNC1_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC1_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC1_(, , ct, m, __VA_ARGS__)
@@ -815,11 +824,7 @@ void mockModule_patchModuleFunc   (void*, void*, void**);
 void mockModule_restoreModuleFunc (void*, void*, void**);
 
 #define EXPECT_MODULE_FUNC_CALL(func, ...) \
-    if (!mock_module_##func::oldFn_) \
-    { \
-        mockModule_patchModuleFunc(&func, reinterpret_cast< void* >( \
-            &mock_module_##func::stub), &mock_module_##func::oldFn_); \
-    } \
+    mock_module_##func::hideCodeFromOptimizer( ); \
     EXPECT_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
 
 #define ON_MODULE_FUNC_CALL(func, ...) \
