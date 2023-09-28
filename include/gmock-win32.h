@@ -54,22 +54,9 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC0_STDCALL_CONV(m, ...) MOCK_MODULE_FUNC0_CALLCONV(__stdcall, m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC0_CDECL_CONV(m, ...) MOCK_MODULE_FUNC0_CALLCONV(__cdecl, m, __VA_ARGS__)
 
-template <typename TFunc, typename TStub>
-static void patchModuleFunc_(void* mock_module_func_oldFn, TFunc func, TStub stub) { 
-	if (!mock_module_func_oldFn) 
-		mockModule_patchModuleFunc( 
-			func 
-			, reinterpret_cast< void* >( stub ) 
-			, &mock_module_func_oldFn);
-}
-
 #define MOCK_MODULE_FUNC1_(tn, constness, ct, func, ...) \
-_Pragma( "optimize( \"\", off )" ) \
 struct mock_module_##func \
 { \
-    static void patchModuleFunc() { \
-		::patchModuleFunc_( mock_module_##func::oldFn_, &::func, mock_module_##func::stub ); \
-	} \
     GMOCK_RESULT_(tn, __VA_ARGS__) ct func( \
         GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1) constness \
     { \
@@ -98,8 +85,7 @@ struct mock_module_##func \
             gmock_a1); \
     } \
     static void* oldFn_; \
-}; void* mock_module_##func::oldFn_ = nullptr; \
-_Pragma( "optimize( \"\", on )" )
+}; void* mock_module_##func::oldFn_ = nullptr;
 
 #define MOCK_MODULE_FUNC1(m, ...) MOCK_MODULE_FUNC1_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC1_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC1_(, , ct, m, __VA_ARGS__)
@@ -822,14 +808,31 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC_OVERLOAD(name, ...) MOCK_MODULE_UNITE(MOCK_MODULE_OVERLOAD(name, MOCK_MODULE_NBARG(__VA_ARGS__)), (__VA_ARGS__))
 #define MOCK_MODULE_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__))##(m, r(__VA_ARGS__))
 
-#define MOCK_STDCALL_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL_CONV)##(m, r(__VA_ARGS__))
+#define MOCK_STDCALL_FUNC(r, m, ...) \
+	MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL_CONV)##(m, r(__VA_ARGS__)) \
+	_Pragma( "optimize( \"\", off )" ) \
+	static void patchModuleFunc_##m() { \
+		::patchModuleFunc_( mock_module_##m::oldFn_, &::m, mock_module_##m::stub ); \
+	} \
+	_Pragma( "optimize( \"\", on )" )
+
+// Hidden from optimizer
+template <typename TFunc, typename TStub>
+static void patchModuleFunc_(void* mock_module_func_oldFn, TFunc func, TStub stub) { 
+	if (!mock_module_func_oldFn) 
+		mockModule_patchModuleFunc( 
+			func 
+			, reinterpret_cast< void* >( stub ) 
+			, &mock_module_func_oldFn);
+}
+
 #define MOCK_CDECL_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##__CDECL_CONV)##(m, r(__VA_ARGS__))
 
 void mockModule_patchModuleFunc   (void*, void*, void**);
 void mockModule_restoreModuleFunc (void*, void*, void**);
 
 #define EXPECT_MODULE_FUNC_CALL(func, ...) \
-	mock_module_##func::patchModuleFunc( ); \
+	patchModuleFunc_##func( ); \
     EXPECT_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
 
 #define ON_MODULE_FUNC_CALL(func, ...) \
