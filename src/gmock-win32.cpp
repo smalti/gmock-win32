@@ -21,6 +21,40 @@ do {                                    \
 
 namespace {
 
+	typedef DWORD (WINAPI *pfnGetLastError_t)( VOID );
+	pfnGetLastError_t g_pfnGetLastError = nullptr;
+
+	typedef HANDLE (WINAPI *pfnGetCurrentProcess_t)( VOID );
+	pfnGetCurrentProcess_t g_pfnGetCurrentProcess = nullptr;
+
+	typedef BOOL (WINAPI *pfnWriteProcessMemory_t)(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T* lpNumberOfBytesWritten);
+	pfnWriteProcessMemory_t g_pfnWriteProcessMemory = nullptr;
+
+	typedef BOOL (WINAPI *pfnVirtualProtect_t)(LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpflOldProtect);
+	pfnVirtualProtect_t g_pfnVirtualProtect = nullptr;
+	
+	typedef HMODULE (WINAPI *pfnGetModuleHandleA_t)(LPCSTR lpModuleName);
+	pfnGetModuleHandleA_t g_pfnGetModuleHandleA = nullptr;
+	
+	typedef PVOID(__stdcall *pfnImageDirectoryEntryToDataEx_t)(PVOID Base, BOOLEAN MappedAsImage, USHORT DirectoryEntry, PULONG Size, PIMAGE_SECTION_HEADER *FoundHeader);
+	pfnImageDirectoryEntryToDataEx_t g_pfnImageDirectoryEntryToDataEx = nullptr;
+
+	static bool g_bInit = false;
+	void init() {
+		HMODULE module;
+		module = LoadLibraryA( "kernel32.dll" );
+		g_pfnGetLastError = (pfnGetLastError_t)GetProcAddress( module, "GetLastError" );
+		g_pfnGetCurrentProcess = (pfnGetCurrentProcess_t)GetProcAddress( module, "GetCurrentProcess" );
+		g_pfnWriteProcessMemory = (pfnWriteProcessMemory_t)GetProcAddress( module, "WriteProcessMemory" );
+		g_pfnVirtualProtect = (pfnVirtualProtect_t)GetProcAddress( module, "VirtualProtect" );
+		// Doesnt matter wchar_t or char, GetModuleHandleW or GetModuleHandleA
+		g_pfnGetModuleHandleA = (pfnGetModuleHandleA_t)GetProcAddress( module, "GetModuleHandleA" );
+		module = LoadLibraryA( "dbghelp.dll" );
+		ImageDirectoryEntryToDataEx;
+		g_pfnImageDirectoryEntryToDataEx = (pfnImageDirectoryEntryToDataEx_t)GetProcAddress( module, "ImageDirectoryEntryToDataEx" );
+		g_bInit = true;
+	}
+
     LONG WINAPI InvalidReadExceptionFilter(PEXCEPTION_POINTERS /*pep*/)
     {
         return EXCEPTION_EXECUTE_HANDLER;
@@ -40,7 +74,7 @@ namespace {
         __try
         {
             *resultDescriptor = reinterpret_cast< PIMAGE_IMPORT_DESCRIPTOR >(
-                ::ImageDirectoryEntryToDataEx(
+                g_pfnImageDirectoryEntryToDataEx(
                     base, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize, &pFoundHeader));
         }
         __except (InvalidReadExceptionFilter(GetExceptionInformation()))
@@ -50,7 +84,7 @@ namespace {
         }
 
         return *resultDescriptor ?
-            S_OK : HRESULT_FROM_WIN32(::GetLastError());
+            S_OK : HRESULT_FROM_WIN32(g_pfnGetLastError());
     }
 
     HRESULT writeProcessMemory(
@@ -59,26 +93,26 @@ namespace {
         if (!address || !buffer)
             return E_INVALIDARG;
 
-        const auto processHandle = ::GetCurrentProcess();
+        const auto processHandle = g_pfnGetCurrentProcess();
 
-        if (::WriteProcessMemory(processHandle, address, buffer, size, nullptr) == 0
-            && (ERROR_NOACCESS == ::GetLastError()))
+        if (g_pfnWriteProcessMemory(processHandle, address, buffer, size, nullptr) == 0
+            && (ERROR_NOACCESS == g_pfnGetLastError()))
         {
             DWORD oldProtect{ };
-            if (::VirtualProtect(address, size, PAGE_WRITECOPY, &oldProtect))
+            if (g_pfnVirtualProtect(address, size, PAGE_WRITECOPY, &oldProtect))
             {               
                 std::shared_ptr< void > finalAction(nullptr, [&](auto&&...) {
-                    ::VirtualProtect(address, size, oldProtect, &oldProtect);
+                    g_pfnVirtualProtect(address, size, oldProtect, &oldProtect);
                 });
 
-                if (!::WriteProcessMemory(processHandle, address, buffer, size, nullptr))
-                    return HRESULT_FROM_WIN32(::GetLastError());
+                if (!g_pfnWriteProcessMemory(processHandle, address, buffer, size, nullptr))
+                    return HRESULT_FROM_WIN32(g_pfnGetLastError());
 
                 return S_OK;
             }
             else
             {
-                return HRESULT_FROM_WIN32(::GetLastError());
+                return HRESULT_FROM_WIN32(g_pfnGetLastError());
             }
         }
         else
@@ -134,7 +168,7 @@ namespace {
 
         LPVOID* ppfn = nullptr;
         RETURN_IF_FAILED(
-            findImportProc(::GetModuleHandle(nullptr), funcAddr, &ppfn));
+            findImportProc(g_pfnGetModuleHandleA(nullptr), funcAddr, &ppfn));
 
         RETURN_IF_FAILED(
             writeProcessMemory(ppfn, &newFunc, sizeof(ppfn)));
@@ -152,7 +186,7 @@ namespace {
 
         LPVOID* ppfn = nullptr;
         RETURN_IF_FAILED(
-            findImportProc(::GetModuleHandle(nullptr), stubFunc, &ppfn));
+            findImportProc(g_pfnGetModuleHandleA(nullptr), stubFunc, &ppfn));
 
         return writeProcessMemory(ppfn, &origFunc, sizeof(ppfn));
     }
@@ -162,6 +196,8 @@ namespace {
 void mockModule_patchModuleFunc(
     void* funcAddr, void* newFunc, void** oldFunc)
 {
+	if ( !g_bInit )
+		init( );
     if (FAILED(patchImportFunc(funcAddr, newFunc, oldFunc)))
         throw std::runtime_error{ "failed to patch module function" };
 }
@@ -169,6 +205,8 @@ void mockModule_patchModuleFunc(
 void mockModule_restoreModuleFunc(
     void* origFunc, void* stubFunc, void** oldFunc)
 {
+	if ( !g_bInit )
+		init( );
     if (FAILED(restoreImportFunc(origFunc, stubFunc)))
         throw std::runtime_error{ "failed to restore module function" };
 
