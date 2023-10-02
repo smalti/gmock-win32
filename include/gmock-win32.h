@@ -810,15 +810,15 @@ struct mock_module_##func \
 
 #define MOCK_STDCALL_FUNC(r, m, ...) \
 	MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL_CONV)##(m, r(__VA_ARGS__)) \
-	_Pragma( "optimize( \"\", off )" ) \
+	__pragma(optimize("", on)) \
 	static void patchModuleFunc_##m() { \
 		::patchModuleFunc_( mock_module_##m::oldFn_, &::m, mock_module_##m::stub ); \
 	} \
-	_Pragma( "optimize( \"\", on )" )
+	__pragma(optimize("", off))
 
 // Hidden from optimizer
 template <typename TFunc, typename TStub>
-static void patchModuleFunc_(void* mock_module_func_oldFn, TFunc func, TStub stub) { 
+void patchModuleFunc_(void* mock_module_func_oldFn, TFunc func, TStub stub) { 
 	if (!mock_module_func_oldFn) 
 		mockModule_patchModuleFunc( 
 			func 
