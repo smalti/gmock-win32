@@ -231,3 +231,38 @@ void mockModule_restoreModuleFunc(
     if (oldFunc)
         *oldFunc = nullptr;
 }
+
+namespace gmock_win32 {
+namespace detail {
+
+    thread_local int lock = 0;
+
+    void avoid_opt(const int& v)
+    {
+        wchar_t text[] = { (wchar_t)v, L'\0' };
+        ::GetWindowText(nullptr, text, 0);
+    }
+
+    proxy_base::proxy_base() noexcept
+    {
+        avoid_opt(lock);
+    }
+    
+    proxy_base::~proxy_base() noexcept
+    {
+        avoid_opt(--lock);
+    }
+
+} // namespace detail
+
+    bypass_mocks::bypass_mocks() noexcept
+    {
+        ++detail::lock;
+    }
+
+    bypass_mocks::~bypass_mocks() noexcept
+    {
+        --detail::lock;
+    }
+
+} // namespace gmock_win32

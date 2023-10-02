@@ -7,18 +7,63 @@
 
 #ifndef GMOCK_ARG_
 #define GMOCK_ARG_(tn, N, ...) \
-    tn ::testing::internal::Function<__VA_ARGS__>::template Arg<N-1>::type 
+    tn ::testing::internal::Function<__VA_ARGS__>::template Arg< N-1 >::type 
 #endif
 
 #ifndef GMOCK_MATCHER_
 #define GMOCK_MATCHER_(tn, N, ...) \
-    const ::testing::Matcher<GMOCK_ARG_(tn, N, __VA_ARGS__)>&
+    const ::testing::Matcher< GMOCK_ARG_(tn, N, __VA_ARGS__) >&
 #endif
 
 #ifndef GMOCK_MOCKER_
 #define GMOCK_MOCKER_(arity, constness, func) \
     GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##func##_, __LINE__)
 #endif
+
+namespace gmock_win32 {
+
+    struct bypass_mocks final
+    {
+        bypass_mocks()  noexcept;
+        ~bypass_mocks() noexcept;
+    };
+
+namespace detail {
+
+    extern thread_local int lock;
+
+    struct proxy_base
+    {
+        proxy_base()  noexcept;
+        ~proxy_base() noexcept;
+    };
+
+    template< typename Reference >
+    struct ref_proxy final : proxy_base
+    {
+        explicit ref_proxy(Reference&& r) noexcept : ref_{ r } { }
+        operator Reference() const noexcept { return ref_; }
+
+    private:
+        Reference ref_;
+    };
+
+    template< typename Reference >
+    ref_proxy< Reference > make_proxy(Reference&& r) noexcept
+    {
+        return ref_proxy< Reference >{ std::forward< decltype(r) >(r) };
+    }
+
+} // namespace detail
+} // namespace gmock_win32
+
+#define BYPASS_MOCKS(expr) \
+    do \
+    { \
+        const gmock_win32::bypass_mocks blockMocks{ }; \
+        expr; \
+    } \
+    while (false);
 
 #define MOCK_MODULE_FUNC0_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
@@ -43,7 +88,15 @@ struct mock_module_##func \
     } \
     static GMOCK_RESULT_(tn, __VA_ARGS__) ct stub() \
     { \
-        return mock_module_##func::instance().func(); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)(); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func(); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -833,15 +886,21 @@ void mockModule_restoreModuleFunc (void*, void*, void**);
 
 #define EXPECT_MODULE_FUNC_CALL(func, ...) \
 	patchModuleFunc_##func( ); \
-    EXPECT_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
+    ++gmock_win32::detail::lock; \
+    static_cast< decltype(EXPECT_CALL(mock_module_##func::instance(), \
+        func(__VA_ARGS__)))& >(gmock_win32::detail::make_proxy( \
+            EXPECT_CALL(mock_module_##func::instance(), func(__VA_ARGS__))))
 
 #define ON_MODULE_FUNC_CALL(func, ...) \
     if (!mock_module_##func::oldFn_) \
     { \
-        mockModule_patchModuleFunc(&func, reinterpret_cast< void* >( \
+        ::mockModule_patchModuleFunc(&func, reinterpret_cast< void* >( \
             &mock_module_##func::stub), &mock_module_##func::oldFn_); \
     } \
-    ON_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
+    ++gmock_win32::detail::lock; \
+    static_cast< decltype(ON_CALL(mock_module_##func::instance(), \
+        func(__VA_ARGS__)))& >(gmock_win32::detail::make_proxy( \
+            ON_CALL(mock_module_##func::instance(), func(__VA_ARGS__))))
 
 #define REAL_MODULE_FUNC(func) \
     reinterpret_cast< decltype(&func) >(mock_module_##func::oldFn_)
@@ -850,7 +909,7 @@ void mockModule_restoreModuleFunc (void*, void*, void**);
     REAL_MODULE_FUNC(func)(__VA_ARGS__)
 
 #define VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(func) \
-    ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance())
+    ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance());
 
 #define RESTORE_MODULE_FUNC(func) \
-    mockModule_restoreModuleFunc(mock_module_##func::oldFn_, mock_module_##func::stub, &mock_module_##func::oldFn_)
+    ::mockModule_restoreModuleFunc(mock_module_##func::oldFn_, mock_module_##func::stub, &mock_module_##func::oldFn_)
