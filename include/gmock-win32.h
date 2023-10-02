@@ -865,18 +865,18 @@ struct mock_module_##func \
 	MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL_CONV)##(m, r(__VA_ARGS__)) \
 	__pragma(optimize("", on)) \
 	static void patchModuleFunc_##m() { \
-		::patchModuleFunc_( mock_module_##m::oldFn_, &::m, mock_module_##m::stub ); \
+		::patchModuleFunc_( &mock_module_##m::oldFn_, &::m, &mock_module_##m::stub ); \
 	} \
 	__pragma(optimize("", off))
 
 // Hidden from optimizer
 template <typename TFunc, typename TStub>
-void patchModuleFunc_(void* mock_module_func_oldFn, TFunc func, TStub stub) { 
-	if (!mock_module_func_oldFn) 
+void patchModuleFunc_(void** mock_module_func_oldFn, TFunc func, TStub stub) { 
+	if (!(*mock_module_func_oldFn)) 
 		mockModule_patchModuleFunc( 
 			func 
 			, reinterpret_cast< void* >( stub ) 
-			, &mock_module_func_oldFn);
+			, mock_module_func_oldFn);
 }
 
 #define MOCK_CDECL_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##__CDECL_CONV)##(m, r(__VA_ARGS__))
@@ -892,11 +892,7 @@ void mockModule_restoreModuleFunc (void*, void*, void**);
             EXPECT_CALL(mock_module_##func::instance(), func(__VA_ARGS__))))
 
 #define ON_MODULE_FUNC_CALL(func, ...) \
-    if (!mock_module_##func::oldFn_) \
-    { \
-        ::mockModule_patchModuleFunc(&func, reinterpret_cast< void* >( \
-            &mock_module_##func::stub), &mock_module_##func::oldFn_); \
-    } \
+	patchModuleFunc_##func( ); \
     ++gmock_win32::detail::lock; \
     static_cast< decltype(ON_CALL(mock_module_##func::instance(), \
         func(__VA_ARGS__)))& >(gmock_win32::detail::make_proxy( \
