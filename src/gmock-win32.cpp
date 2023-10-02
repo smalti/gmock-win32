@@ -40,19 +40,35 @@ namespace {
 	pfnImageDirectoryEntryToDataEx_t g_pfnImageDirectoryEntryToDataEx = nullptr;
 
 	static bool g_bInit = false;
-	void init() {
+	bool init() {
 		HMODULE module;
 		module = LoadLibraryA( "kernel32.dll" );
+		if ( !module ) 
+			return false;
 		g_pfnGetLastError = (pfnGetLastError_t)GetProcAddress( module, "GetLastError" );
+		if ( !g_pfnGetLastError ) 
+			return false;
 		g_pfnGetCurrentProcess = (pfnGetCurrentProcess_t)GetProcAddress( module, "GetCurrentProcess" );
+		if ( !g_pfnGetCurrentProcess ) 
+			return false;
 		g_pfnWriteProcessMemory = (pfnWriteProcessMemory_t)GetProcAddress( module, "WriteProcessMemory" );
+		if ( !g_pfnWriteProcessMemory ) 
+			return false;
 		g_pfnVirtualProtect = (pfnVirtualProtect_t)GetProcAddress( module, "VirtualProtect" );
+		if ( !g_pfnVirtualProtect ) 
+			return false;
 		// Doesnt matter wchar_t or char, GetModuleHandleW or GetModuleHandleA
 		g_pfnGetModuleHandleA = (pfnGetModuleHandleA_t)GetProcAddress( module, "GetModuleHandleA" );
+		if ( !g_pfnGetModuleHandleA ) 
+			return false;
 		module = LoadLibraryA( "dbghelp.dll" );
-		ImageDirectoryEntryToDataEx;
+		if ( !module ) 
+			return false;
 		g_pfnImageDirectoryEntryToDataEx = (pfnImageDirectoryEntryToDataEx_t)GetProcAddress( module, "ImageDirectoryEntryToDataEx" );
+		if ( g_pfnImageDirectoryEntryToDataEx ) 
+			return false;
 		g_bInit = true;
+		return true;
 	}
 
     LONG WINAPI InvalidReadExceptionFilter(PEXCEPTION_POINTERS /*pep*/)
@@ -197,7 +213,8 @@ void mockModule_patchModuleFunc(
     void* funcAddr, void* newFunc, void** oldFunc)
 {
 	if ( !g_bInit )
-		init( );
+		if ( !init( ) )
+	        throw std::runtime_error{ "failed to initialize patcher" };
     if (FAILED(patchImportFunc(funcAddr, newFunc, oldFunc)))
         throw std::runtime_error{ "failed to patch module function" };
 }
@@ -206,7 +223,8 @@ void mockModule_restoreModuleFunc(
     void* origFunc, void* stubFunc, void** oldFunc)
 {
 	if ( !g_bInit )
-		init( );
+		if ( !init( ) )
+	        throw std::runtime_error{ "failed to initialize patcher" };
     if (FAILED(restoreImportFunc(origFunc, stubFunc)))
         throw std::runtime_error{ "failed to restore module function" };
 
