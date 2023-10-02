@@ -212,9 +212,9 @@ namespace {
 void mockModule_patchModuleFunc(
     void* funcAddr, void* newFunc, void** oldFunc)
 {
-	if ( !g_bInit )
-		if ( !init( ) )
-	        throw std::runtime_error{ "failed to initialize patcher" };
+    if ( !g_bInit )
+        if ( !init( ) )
+            throw std::runtime_error{ "failed to initialize patcher" };
     if (FAILED(patchImportFunc(funcAddr, newFunc, oldFunc)))
         throw std::runtime_error{ "failed to patch module function" };
 }
@@ -222,8 +222,8 @@ void mockModule_patchModuleFunc(
 void mockModule_restoreModuleFunc(
     void* origFunc, void* stubFunc, void** oldFunc)
 {
-	if ( !g_bInit )
-		throw std::runtime_error{ "failed in initialization order" };
+    if ( !g_bInit )
+        throw std::runtime_error{ "failed in initialization order" };
     if (FAILED(restoreImportFunc(origFunc, stubFunc)))
         throw std::runtime_error{ "failed to restore module function" };
 
@@ -235,21 +235,10 @@ namespace gmock_win32 {
 namespace detail {
 
     thread_local int lock = 0;
-
-    void avoid_opt(const int& v)
-    {
-        wchar_t text[] = { (wchar_t)v, L'\0' };
-        ::GetWindowText(nullptr, text, 0);
-    }
-
-    proxy_base::proxy_base() noexcept
-    {
-        avoid_opt(lock);
-    }
     
     proxy_base::~proxy_base() noexcept
     {
-        avoid_opt(--lock);
+        --lock;
     }
 
 } // namespace detail
