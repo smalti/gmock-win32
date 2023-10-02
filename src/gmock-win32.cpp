@@ -65,7 +65,7 @@ namespace {
 		if ( !module ) 
 			return false;
 		g_pfnImageDirectoryEntryToDataEx = (pfnImageDirectoryEntryToDataEx_t)GetProcAddress( module, "ImageDirectoryEntryToDataEx" );
-		if ( g_pfnImageDirectoryEntryToDataEx ) 
+		if ( !g_pfnImageDirectoryEntryToDataEx ) 
 			return false;
 		g_bInit = true;
 		return true;
@@ -223,8 +223,7 @@ void mockModule_restoreModuleFunc(
     void* origFunc, void* stubFunc, void** oldFunc)
 {
 	if ( !g_bInit )
-		if ( !init( ) )
-	        throw std::runtime_error{ "failed to initialize patcher" };
+		throw std::runtime_error{ "failed in initialization order" };
     if (FAILED(restoreImportFunc(origFunc, stubFunc)))
         throw std::runtime_error{ "failed to restore module function" };
 
