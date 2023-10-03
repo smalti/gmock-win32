@@ -7,18 +7,59 @@
 
 #ifndef GMOCK_ARG_
 #define GMOCK_ARG_(tn, N, ...) \
-    tn ::testing::internal::Function<__VA_ARGS__>::template Arg<N-1>::type 
+    tn ::testing::internal::Function<__VA_ARGS__>::template Arg< N-1 >::type 
 #endif
 
 #ifndef GMOCK_MATCHER_
 #define GMOCK_MATCHER_(tn, N, ...) \
-    const ::testing::Matcher<GMOCK_ARG_(tn, N, __VA_ARGS__)>&
+    const ::testing::Matcher< GMOCK_ARG_(tn, N, __VA_ARGS__) >&
 #endif
 
 #ifndef GMOCK_MOCKER_
 #define GMOCK_MOCKER_(arity, constness, func) \
     GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##func##_, __LINE__)
 #endif
+
+namespace gmock_win32 {
+
+    struct bypass_mocks final
+    {
+        bypass_mocks()  noexcept;
+        ~bypass_mocks() noexcept;
+    };
+
+namespace detail {
+
+    extern thread_local int lock;
+
+    struct proxy_base{ ~proxy_base() noexcept; };
+
+    template< typename Reference >
+    struct ref_proxy final : proxy_base
+    {
+        explicit ref_proxy(Reference&& r) noexcept : ref_{ r } { }
+        operator Reference() const noexcept { return ref_; }
+
+    private:
+        Reference ref_;
+    };
+
+    template< typename Reference >
+    ref_proxy< Reference > make_proxy(Reference&& r) noexcept
+    {
+        return ref_proxy< Reference >{ std::forward< Reference >(r) };
+    }
+
+} // namespace detail
+} // namespace gmock_win32
+
+#define BYPASS_MOCKS(expr) \
+    do \
+    { \
+        const gmock_win32::bypass_mocks blockMocks{ }; \
+        expr; \
+    } \
+    while (false);
 
 #define MOCK_MODULE_FUNC0_(tn, constness, ct, func, ...) \
 struct mock_module_##func \
@@ -43,7 +84,15 @@ struct mock_module_##func \
     } \
     static GMOCK_RESULT_(tn, __VA_ARGS__) ct stub() \
     { \
-        return mock_module_##func::instance().func(); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)(); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func(); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -81,8 +130,17 @@ struct mock_module_##func \
     static GMOCK_RESULT_(tn, __VA_ARGS__) ct stub( \
         GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -123,8 +181,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1, \
         GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -168,8 +235,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2, \
         GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -216,8 +292,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
         GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -267,8 +352,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
         GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -321,8 +415,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
         GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -378,8 +481,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
         GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -438,8 +550,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
         GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -501,8 +622,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8, \
         GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -567,8 +697,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9, \
         GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -636,8 +775,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10, \
         GMOCK_ARG_(tn, 11, __VA_ARGS__) gmock_a11) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -708,8 +856,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 11, __VA_ARGS__) gmock_a11, \
         GMOCK_ARG_(tn, 12, __VA_ARGS__) gmock_a12) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -783,8 +940,17 @@ struct mock_module_##func \
         GMOCK_ARG_(tn, 12, __VA_ARGS__) gmock_a12, \
         GMOCK_ARG_(tn, 13, __VA_ARGS__) gmock_a13) \
     { \
-        return mock_module_##func::instance().func( \
-            gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12, gmock_a13); \
+        if (gmock_win32::detail::lock) \
+        { \
+            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12, gmock_a13); \
+        } \
+        else \
+        { \
+            const gmock_win32::bypass_mocks blockMocks{ }; \
+            return instance().func( \
+                gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12, gmock_a13); \
+        } \
     } \
     static void* oldFn_; \
 }; void* mock_module_##func::oldFn_ = nullptr;
@@ -809,39 +975,42 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__))##(m, r(__VA_ARGS__))
 
 #define MOCK_STDCALL_FUNC(r, m, ...) \
-	MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL_CONV)##(m, r(__VA_ARGS__)) \
-	__pragma(optimize("", on)) \
-	static void patchModuleFunc_##m() { \
-		::patchModuleFunc_( mock_module_##m::oldFn_, &::m, mock_module_##m::stub ); \
-	} \
-	__pragma(optimize("", off))
-
-// Hidden from optimizer
-template <typename TFunc, typename TStub>
-void patchModuleFunc_(void* mock_module_func_oldFn, TFunc func, TStub stub) { 
-	if (!mock_module_func_oldFn) 
-		mockModule_patchModuleFunc( 
-			func 
-			, reinterpret_cast< void* >( stub ) 
-			, &mock_module_func_oldFn);
-}
-
-#define MOCK_CDECL_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##__CDECL_CONV)##(m, r(__VA_ARGS__))
+    MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL_CONV)##(m, r(__VA_ARGS__)) \
+        __pragma(optimize("", on)) \
+        static void patchModuleFunc_##m() { \
+            ::patchModuleFunc_( &mock_module_##m::oldFn_, &::m, &mock_module_##m::stub ); \
+        } \
+        __pragma(optimize("", off))
 
 void mockModule_patchModuleFunc   (void*, void*, void**);
 void mockModule_restoreModuleFunc (void*, void*, void**);
 
+// Hidden from optimizer
+template< typename TFunc, typename TStub >
+void patchModuleFunc_(void** mock_module_func_oldFn, TFunc func, TStub stub) { 
+    if (!(*mock_module_func_oldFn)) 
+        mockModule_patchModuleFunc( 
+            func 
+            , reinterpret_cast< void* >( stub ) 
+            , mock_module_func_oldFn);
+}
+
+#define MOCK_CDECL_FUNC(r, m, ...) \
+    MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##__CDECL_CONV)##(m, r(__VA_ARGS__))
+
 #define EXPECT_MODULE_FUNC_CALL(func, ...) \
-	patchModuleFunc_##func( ); \
-    EXPECT_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
+    patchModuleFunc_##func( ); \
+    ++gmock_win32::detail::lock; \
+    static_cast< decltype(EXPECT_CALL(mock_module_##func::instance(), \
+        func(__VA_ARGS__)))& >(gmock_win32::detail::make_proxy( \
+            EXPECT_CALL(mock_module_##func::instance(), func(__VA_ARGS__))))
 
 #define ON_MODULE_FUNC_CALL(func, ...) \
-    if (!mock_module_##func::oldFn_) \
-    { \
-        mockModule_patchModuleFunc(&func, reinterpret_cast< void* >( \
-            &mock_module_##func::stub), &mock_module_##func::oldFn_); \
-    } \
-    ON_CALL(mock_module_##func::instance(), func(__VA_ARGS__))
+    patchModuleFunc_##func( ); \
+    ++gmock_win32::detail::lock; \
+    static_cast< decltype(ON_CALL(mock_module_##func::instance(), \
+        func(__VA_ARGS__)))& >(gmock_win32::detail::make_proxy( \
+            ON_CALL(mock_module_##func::instance(), func(__VA_ARGS__))))
 
 #define REAL_MODULE_FUNC(func) \
     reinterpret_cast< decltype(&func) >(mock_module_##func::oldFn_)
@@ -850,7 +1019,7 @@ void mockModule_restoreModuleFunc (void*, void*, void**);
     REAL_MODULE_FUNC(func)(__VA_ARGS__)
 
 #define VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(func) \
-    ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance())
+    ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance());
 
 #define RESTORE_MODULE_FUNC(func) \
-    mockModule_restoreModuleFunc(mock_module_##func::oldFn_, mock_module_##func::stub, &mock_module_##func::oldFn_)
+    ::mockModule_restoreModuleFunc(mock_module_##func::oldFn_, mock_module_##func::stub, &mock_module_##func::oldFn_)
