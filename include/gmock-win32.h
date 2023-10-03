@@ -982,6 +982,9 @@ struct mock_module_##func \
         } \
         __pragma(optimize("", off))
 
+void mockModule_patchModuleFunc   (void*, void*, void**);
+void mockModule_restoreModuleFunc (void*, void*, void**);
+
 // Hidden from optimizer
 template< typename TFunc, typename TStub >
 void patchModuleFunc_(void** mock_module_func_oldFn, TFunc func, TStub stub) { 
@@ -994,9 +997,6 @@ void patchModuleFunc_(void** mock_module_func_oldFn, TFunc func, TStub stub) {
 
 #define MOCK_CDECL_FUNC(r, m, ...) \
     MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##__CDECL_CONV)##(m, r(__VA_ARGS__))
-
-void mockModule_patchModuleFunc   (void*, void*, void**);
-void mockModule_restoreModuleFunc (void*, void*, void**);
 
 #define EXPECT_MODULE_FUNC_CALL(func, ...) \
     patchModuleFunc_##func( ); \
