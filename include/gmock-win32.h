@@ -95,7 +95,7 @@ struct mock_module_##func \
         } \
     } \
     static void* oldFn_; \
-}; void* mock_module_##func::oldFn_ = nullptr;
+};
 
 #define MOCK_MODULE_FUNC0(m, ...) MOCK_MODULE_FUNC0_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC0_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC0_(, , ct, m, __VA_ARGS__)
@@ -991,8 +991,19 @@ struct mock_module_##func \
 	MOCK_MODULE_AVOID_OPT( m )
 
 #define MOCK_STDCALL_FUNC(r, m, ...) \
-	MOCK_MODULE_OVERLOAD( MOCK_MODULE_NBARG(__VA_ARGS__), _STDCALL_CONV, (m, r(__VA_ARGS__)) ) \
-	MOCK_MODULE_AVOID_OPT( m )
+	MOCK_STDCALL_FUNC_DECLARE(r, m, __VA_ARGS__); \
+	MOCK_STDCALL_FUNC_DEFINE( m )
+
+#define MOCK_STDCALL_FUNC_DECLARE(r, m, ...) \
+    MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL_CONV)##(m, r(__VA_ARGS__)) \
+    __pragma(optimize("", on)) \
+    static void patchModuleFunc_##m() { \
+        ::patchModuleFunc_( &mock_module_##m::oldFn_, &::m, &mock_module_##m::stub ); \
+    } \
+    __pragma(optimize("", off))
+
+#define MOCK_STDCALL_FUNC_DEFINE(m) \
+		void* mock_module_##m::oldFn_ = nullptr;
 
 void mockModule_patchModuleFunc   (void*, void*, void**);
 void mockModule_restoreModuleFunc (void*, void*, void**);
