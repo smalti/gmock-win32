@@ -9,6 +9,7 @@ To simplify this process, this library allows you to replace imported module fun
 Mocking of system functions in general can be a sign of poorly designed code. This means that the code is tightly coupled to the system and relies on a specific implementation with side effects, making it less flexible and difficult to test.
 
 But sometimes it may be impossible (or quite expensive) to rewrite existing code to decouple it from that system API before testing it. Also we must not forget that `wrappers over the system API must also be tested` (and it's usually not recommended to introduce an extra layer of abstraction solely for testing purposes). In such situations, we can use this GMock-lib extension to test that code (at least tests for system wrappers that many projects have).
+In any case, try to avoid [breaking the contracts](https://stackoverflow.com/questions/2965483/unit-tests-the-benefit-from-unit-tests-with-contract-changes) by monitoring/checking test design.
 
 # Implementation idea
 
