@@ -40,33 +40,36 @@ namespace {
 	pfnImageDirectoryEntryToDataEx_t g_pfnImageDirectoryEntryToDataEx = nullptr;
 
 	static bool g_bInit = false;
-	bool init() {
+	bool init()
+    {
 		HMODULE module;
-		module = LoadLibraryA( "kernel32.dll" );
+		module = ::LoadLibraryA( "kernel32.dll" );
 		if ( !module ) 
 			return false;
-		g_pfnGetLastError = (pfnGetLastError_t)GetProcAddress( module, "GetLastError" );
+
+		g_pfnGetLastError = (pfnGetLastError_t)::GetProcAddress( module, "GetLastError" );
 		if ( !g_pfnGetLastError ) 
 			return false;
-		g_pfnGetCurrentProcess = (pfnGetCurrentProcess_t)GetProcAddress( module, "GetCurrentProcess" );
+		g_pfnGetCurrentProcess = (pfnGetCurrentProcess_t)::GetProcAddress( module, "GetCurrentProcess" );
 		if ( !g_pfnGetCurrentProcess ) 
 			return false;
-		g_pfnWriteProcessMemory = (pfnWriteProcessMemory_t)GetProcAddress( module, "WriteProcessMemory" );
+		g_pfnWriteProcessMemory = (pfnWriteProcessMemory_t)::GetProcAddress( module, "WriteProcessMemory" );
 		if ( !g_pfnWriteProcessMemory ) 
 			return false;
-		g_pfnVirtualProtect = (pfnVirtualProtect_t)GetProcAddress( module, "VirtualProtect" );
+		g_pfnVirtualProtect = (pfnVirtualProtect_t)::GetProcAddress( module, "VirtualProtect" );
 		if ( !g_pfnVirtualProtect ) 
 			return false;
 		// Doesnt matter wchar_t or char, GetModuleHandleW or GetModuleHandleA
-		g_pfnGetModuleHandleA = (pfnGetModuleHandleA_t)GetProcAddress( module, "GetModuleHandleA" );
+		g_pfnGetModuleHandleA = (pfnGetModuleHandleA_t)::GetProcAddress( module, "GetModuleHandleA" );
 		if ( !g_pfnGetModuleHandleA ) 
 			return false;
-		module = LoadLibraryA( "dbghelp.dll" );
+		module = ::LoadLibraryA( "dbghelp.dll" );
 		if ( !module ) 
 			return false;
-		g_pfnImageDirectoryEntryToDataEx = (pfnImageDirectoryEntryToDataEx_t)GetProcAddress( module, "ImageDirectoryEntryToDataEx" );
+		g_pfnImageDirectoryEntryToDataEx = (pfnImageDirectoryEntryToDataEx_t)::GetProcAddress( module, "ImageDirectoryEntryToDataEx" );
 		if ( !g_pfnImageDirectoryEntryToDataEx ) 
 			return false;
+
 		g_bInit = true;
 		return true;
 	}
@@ -212,9 +215,10 @@ namespace {
 void mockModule_patchModuleFunc(
     void* funcAddr, void* newFunc, void** oldFunc)
 {
-	if ( !g_bInit )
-		if ( !init( ) )
-	        throw std::runtime_error{ "failed to initialize patcher" };
+    if ( !g_bInit )
+        if ( !init( ) )
+            throw std::runtime_error{ "failed to initialize patcher" };
+
     if (FAILED(patchImportFunc(funcAddr, newFunc, oldFunc)))
         throw std::runtime_error{ "failed to patch module function" };
 }
@@ -222,11 +226,36 @@ void mockModule_patchModuleFunc(
 void mockModule_restoreModuleFunc(
     void* origFunc, void* stubFunc, void** oldFunc)
 {
-	if ( !g_bInit )
-		throw std::runtime_error{ "failed in initialization order" };
+    if ( !g_bInit )
+        throw std::runtime_error{ "failed in initialization order" };
+
     if (FAILED(restoreImportFunc(origFunc, stubFunc)))
         throw std::runtime_error{ "failed to restore module function" };
 
     if (oldFunc)
         *oldFunc = nullptr;
 }
+
+namespace gmock_win32 {
+namespace detail {
+
+    thread_local int lock = 0;
+    
+    proxy_base::~proxy_base() noexcept
+    {
+        --lock;
+    }
+
+} // namespace detail
+
+    bypass_mocks::bypass_mocks() noexcept
+    {
+        ++detail::lock;
+    }
+
+    bypass_mocks::~bypass_mocks() noexcept
+    {
+        --detail::lock;
+    }
+
+} // namespace gmock_win32
