@@ -970,17 +970,29 @@ struct mock_module_##func \
 #define MOCK_MODULE_SUB_NBARG(...) MOCK_MODULE_EXPAND(MOCK_MODULE_LASTOF15(__VA_ARGS__, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
 #define MOCK_MODULE_NBARG(...) MOCK_MODULE_SUB_NBARG(MOCK_MODULE_PREFIX(__VA_ARGS__))
 
-#define MOCK_MODULE_OVERLOAD(name, count) MOCK_MODULE_CONCAT(name, count)
+// Expand before concatenate
+#define MOCK_MODULE_MAKENAME_(count_args, conv) MOCK_MODULE_FUNC##count_args##conv
+#define MOCK_MODULE_OVERLOAD(count_args, conv, signat) MOCK_MODULE_MAKENAME_( count_args, conv )signat
 #define MOCK_MODULE_FUNC_OVERLOAD(name, ...) MOCK_MODULE_UNITE(MOCK_MODULE_OVERLOAD(name, MOCK_MODULE_NBARG(__VA_ARGS__)), (__VA_ARGS__))
-#define MOCK_MODULE_FUNC(r, m, ...) MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__))##(m, r(__VA_ARGS__))
+
+#define MOCK_MODULE_AVOID_OPT(m) \
+	__pragma(optimize("", on)) \
+	static void patchModuleFunc_##m() { \
+		::patchModuleFunc_( &mock_module_##m::oldFn_, &::m, &mock_module_##m::stub ); \
+	} \
+	__pragma(optimize("", off))
+
+#define MOCK_MODULE_FUNC(r, m, ...) \
+	MOCK_MODULE_OVERLOAD( MOCK_MODULE_NBARG(__VA_ARGS__), , (m, r(__VA_ARGS__)) ) \
+	MOCK_MODULE_AVOID_OPT( m )
+
+#define MOCK_CDECL_FUNC(r, m, ...) \
+	MOCK_MODULE_OVERLOAD( MOCK_MODULE_NBARG(__VA_ARGS__), _CDECL_CONV, (m, r(__VA_ARGS__)) ) \
+	MOCK_MODULE_AVOID_OPT( m )
 
 #define MOCK_STDCALL_FUNC(r, m, ...) \
-    MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##_STDCALL_CONV)##(m, r(__VA_ARGS__)) \
-        __pragma(optimize("", on)) \
-        static void patchModuleFunc_##m() { \
-            ::patchModuleFunc_( &mock_module_##m::oldFn_, &::m, &mock_module_##m::stub ); \
-        } \
-        __pragma(optimize("", off))
+	MOCK_MODULE_OVERLOAD( MOCK_MODULE_NBARG(__VA_ARGS__), _STDCALL_CONV, (m, r(__VA_ARGS__)) ) \
+	MOCK_MODULE_AVOID_OPT( m )
 
 void mockModule_patchModuleFunc   (void*, void*, void**);
 void mockModule_restoreModuleFunc (void*, void*, void**);
@@ -994,9 +1006,6 @@ void patchModuleFunc_(void** mock_module_func_oldFn, TFunc func, TStub stub) {
             , reinterpret_cast< void* >( stub ) 
             , mock_module_func_oldFn);
 }
-
-#define MOCK_CDECL_FUNC(r, m, ...) \
-    MOCK_MODULE_OVERLOAD(MOCK_MODULE_FUNC, MOCK_MODULE_NBARG(__VA_ARGS__)##__CDECL_CONV)##(m, r(__VA_ARGS__))
 
 #define EXPECT_MODULE_FUNC_CALL(func, ...) \
     patchModuleFunc_##func( ); \
