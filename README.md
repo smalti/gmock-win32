@@ -201,9 +201,10 @@ TEST(GetCurrentThreadIdTest, BaseTest)
     // If there is some code that shouldn't be involved during testing
     // we can also suppress it:
 
-    const auto id = [useOrigAPI = gmock_win32::bypass_mocks{ }]() {
-        return std::this_thread::get_id();
-    }();
+    {
+        const gmock_win32::bypass_mocks useOrigAPI{ };
+        std::cout << std::this_thread::get_id() << std::endl;
+    }
     ...
     
     RESTORE_MODULE_FUNC(GetCurrentThreadId);
@@ -217,12 +218,12 @@ int main(int argc, char* argv[])
 }
 ```
 
-# Build info
+# Supported Platforms
 
 * C++ Version >= 14
 * MSVC >= 2019
 * Clang >= 12.0.0
-* Windows Client	>= 10
+* Windows Client >= 10
 
 # Tested with GTest
 
