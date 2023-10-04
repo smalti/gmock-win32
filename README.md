@@ -4,19 +4,23 @@ Suppose there is a task to test code that relies on certain system functions. Id
 
 To simplify this process, this library allows you to replace imported module functions, including Win32 system functions, with a stub for testing purposes using GMock. Since it is an extension of the GMock library, you can use the same actions and matchers as you normally would with GMock.
 
+---
+
+Mocking of system functions in general can be a sign of poorly designed code. This means that the code is tightly coupled to the system and relies on a specific implementation with side effects, making it less flexible and difficult to test.
+
+But sometimes it may be impossible (or quite expensive) to rewrite existing code to decouple it from that system API before testing it. Also we must not forget that `wrappers over the system API must also be tested` (and it's usually not recommended to introduce an extra layer of abstraction solely for testing purposes). In such situations, we can use this GMock-lib extension to test that code (at least tests for system wrappers that many projects have).
+
 # Implementation idea
 
 To use the mock technique for Win32 APIs, you need to replace the original global Win32 functions with something else. In C++, this is achieved through dynamic polymorphism with virtual functions via vtable and function overloading.
 
 The `Import Address Table` (IAT) patching technique is a documented approach that can be used to achieve this goal. The library extends GMock library by using this technique. However, there is still a limitation - we cannot substitute a Win32 function that is used by run-time dynamic linking (`LoadLibrary` + `GetProcAddress`). You can find several GMock library extensions on GitHub, each with its own unique approach. The current implementation was inspired by a header-only library called [gmock-global](https://github.com/apriorit/gmock-global).
 
-Generally using the mocking global system functions can be a sign of poorly designed code. It means that the code is tightly coupled with the system and relies on a specific implementation with side effects, making it less flexible and difficult to test. But sometimes, it may not be feasible to rewrite existing code before testing it, perhaps due to time constraints or other reasons (thin system wrappers, vtable overhead, etc.). In such cases, it's still better to test the code in its current form rather than having no tests at all.
-
-# How to use
+# Basic Concepts
 
 To use the mock behavior for Win32 API (or other DLL) module functions, you'll first need to build the library. Once that's done, you can include the library `gmock-win32.h` header immediately after the `gmock/gmock.h` header in your test code. Several macros are then available to help you achieve the desired mock behavior:
 
-#### 1. Create Win32 (DLL module) function mocks by using `MOCK_STDCALL_FUNC` / `MOCK_CDECL_FUNC` macro (by defining them in global scope).
+### 1. Create function mocks by using `MOCK_STDCALL_FUNC` / `MOCK_CDECL_FUNC` macro (by defining them in global scope)
 
 Macro syntax: `MOCK_*CALLING_CONVENTION*_FUNC(Retval, FunctionName, arg1, arg2...)`:
 
@@ -25,7 +29,7 @@ MOCK_STDCALL_FUNC(DWORD, GetCurrentProcessId);
 MOCK_STDCALL_FUNC(DWORD, GetProcessIdOfThread, HANDLE);
 ```
 
-#### 2. Setup expectations via `EXPECT_MODULE_FUNC_CALL` / `ON_MODULE_FUNC_CALL` + use GMock matchers and actions as usual:
+### 2. Then setup expectations via `EXPECT_MODULE_FUNC_CALL` / `ON_MODULE_FUNC_CALL` + use GMock matchers and actions as usual
 
 Macro syntax: `*EXPECTATION*_MODULE_FUNC_CALL(FunctionName, matchers...)`
 
@@ -41,38 +45,18 @@ ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
 ON_MODULE_FUNC_CALL(GetProcessIdOfThread, Eq(HANDLE(42))).WillByDefault(Return(1));
 ```
 
-#### 3. You can use a helper macro `INVOKE_REAL_MODULE_FUNC` to call the original function:
-
-```cpp
-ON_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillByDefault(Invoke([&](HANDLE handle) -> DWORD
-{
-    return ::GetCurrentThread() == handle ?
-        INVOKE_REAL_MODULE_FUNC(GetProcessIdOfThread, handle) : 12345UL;
-}));
-```
-
-##### 3a. You can also use the `REAL_MODULE_FUNC` macro to get a reference to the original function without calling it:
-
-This can be useful to create a mock that calls through to the real function, but is still instrumented.
-
-```cpp
-ON_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillByDefault(Invoke(REAL_MODULE_FUNC(GetProcessIdOfThread)));
-EXPECT_MODULE_FUNC_CALL(GetProcessIdOfThread, _).Times(1);
-```
-
-#### 4. If you need to use the mock function in multiple tests with different expectations, you can clear the previous expectations and verify them by using the `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro:
+### 3. To validate and clear expectations after tests use the `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro (usually used for multiple tests with different expectations and can be executed as part of the test tear-down logic)
 
 ```cpp
 VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(GetCurrentProcessId);
 ```
 
-#### 5. You can use the `RESTORE_MODULE_FUNC` macro to restore the original module function and remove the IAT patch. This can be useful in situations where you no longer need the mock behavior in the test executable process or if some other 3rd party code in the process uses the same functions somewhere (so, it can help you avoid conflicts with GMock internal implementation, CRT, and other libraries):
+### 4. Use the `RESTORE_MODULE_FUNC` macro to restore the original module function and remove the IAT patch after all tests finished
 
 ```cpp
 RESTORE_MODULE_FUNC(GetCurrentProcessId);
 ```
-
-# Basic sample
+## Demonstration sample
 
 ```cpp
 #include <gmock/gmock.h>
@@ -123,17 +107,131 @@ After mock expectations set:
   GetProcessIdOfThread: 1
 ```
 
+# Advanced Topics
+
+### 1. Delegating calls to a real function
+
+You can use a helper macro `INVOKE_REAL_MODULE_FUNC` to call the original function:
+
+```cpp
+ON_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillByDefault(Invoke([&](HANDLE handle) -> DWORD
+{
+    return ::GetCurrentThread() == handle ?
+        INVOKE_REAL_MODULE_FUNC(GetProcessIdOfThread, handle) : 12345UL;
+}));
+```
+You can also use the `REAL_MODULE_FUNC` macro to get a reference to the original function without calling it. This can be useful to create a mock that calls through to the real function, but is still instrumented:
+
+```cpp
+ON_MODULE_FUNC_CALL(GetProcessIdOfThread, _).WillByDefault(Invoke(REAL_MODULE_FUNC(GetProcessIdOfThread)));
+EXPECT_MODULE_FUNC_CALL(GetProcessIdOfThread, _).Times(1);
+```
+
+### 2. Mocking APIs that are also used inside GTest
+
+There are several Win32 API functions used within GTest code that may interact with client tests. This interaction can lead to oversaturated results or even deadlocks. API used in GTest:
+
+```cpp
+// Possible list of used APIs in GTest (depends on version of the GTest)
+CloseHandle
+CreateThread
+DeleteCriticalSection
+EnterCriticalSection
+GetCurrentThreadId
+GetCurrentThread
+GetLastError
+GetTempFileNameA
+GetTempPathA
+GetThreadPriority
+InitializeCriticalSection
+InterlockedCompareExchange
+LeaveCriticalSection
+ResumeThread
+SetThreadPriority
+Sleep
+WaitForSingleObject
+```
+
+To address such issues, we have two options. First, we can utilize the `BYPASS_MOCKS` macro to suppress mocks during the execution of GMock code. Alternatively, we can create a `gmock_win32::bypass_mocks{ }` object to apply suppression within a specific scope.
+
+However, it's important to note that you do not need to manually suppress mocks when creating function mocks using the `MOCK_STDCALL_FUNC` or `MOCK_CDECL_FUNC` macros, or when setting up expectations with their clauses using the `ON_MODULE_FUNC_CALL` or `EXPECT_MODULE_FUNC_CALL` macros - this is done automatically for you. Additionally, there's the option to use `RESTORE_MODULE_FUNC` to revert the API to its original state, for instance, before calling `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS`.
+
+## Mocks bypassing example:
+
+```cpp
+#include <gmock/gmock.h>
+#include <gmock-win32.h>
+
+// There's no need to take any action to suppress mocks during
+// their creation:
+
+MOCK_STDCALL_FUNC(DWORD, GetCurrentThreadId);
+...
+
+TEST(GetCurrentThreadIdTest, BaseTest)
+{
+    // No action is required to suppress mocks during setup of expectations - it
+    // will be handled automatically:
+
+    ON_MODULE_FUNC_CALL(GetCurrentThreadId).WillByDefault(testing::Return(42U));
+    EXPECT_MODULE_FUNC_CALL(GetCurrentThreadId).Times(2);
+
+    const auto tid1 = ::GetCurrentThreadId();
+    const auto tid2 = ::GetCurrentThreadId();
+
+    // Here we suppress our mocks during the execution of EXPECT_EQ (GTest uses
+    // the GetCurrentThreadId function (inside the EXPECT_EQ macro) and therefore
+    // we could get wrong results):
+
+    BYPASS_MOCKS(EXPECT_EQ(tid1, 42U));
+    BYPASS_MOCKS(EXPECT_EQ(tid2, 42U));
+
+    // Mocks can also be suppressed using a scoped object (during the execution
+    // of EXPECT_EQ):
+    
+    {
+        const gmock_win32::bypass_mocks useOrigAPI{ };
+
+        EXPECT_EQ(tid1, 42U);
+        EXPECT_EQ(tid2, 42U);
+    }
+
+    ...
+
+    // If there is some code that shouldn't be involved during testing
+    // we can also suppress it:
+
+    const auto id = [useOrigAPI = gmock_win32::bypass_mocks{ }]() {
+        return std::this_thread::get_id();
+    }();
+    ...
+    
+    RESTORE_MODULE_FUNC(GetCurrentThreadId);
+    VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(GetCurrentThreadId);
+}
+
+int main(int argc, char* argv[])
+{
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+```
+
 # Build info
 
-- Tested with:
-    * `googletest 1.8.1`
-    * `googletest 1.10.0`
-    * `googletest 1.11.0`
-    * `googletest 1.12.1`
-    * `googletest 1.13.0`
-    * `googletest 1.14.0`
-- Compiled with `Visual Studio 2015` Update3 `v140 toolset` x86 / x64
-- Microsoft Windows Version: 10.0.19045.3324
+* C++ Version >= 14
+* MSVC >= 2019
+* Clang >= 12.0.0
+* Windows Client	>= 10
+
+# Tested with GTest
+
+* `googletest 1.8.1`
+* `googletest 1.10.0`
+* `googletest 1.11.0`
+* `googletest 1.12.1`
+* `googletest 1.13.0`
+* `googletest 1.14.0`
 
 # Samples
 
