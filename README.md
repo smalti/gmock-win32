@@ -222,7 +222,7 @@ int main(int argc, char* argv[])
 # Supported Platforms
 
 * C++ Version >= 14
-* MSVC >= 2019
+* MSVC >= 2019 (v142)
 * Clang >= 12.0.0
 * Windows Client >= 10
 
@@ -245,6 +245,13 @@ Here are some examples of library usage: [gmock-win32-sample](https://github.com
 
 # Version history
 
+## Version 1.2.0 (** October 2023)
+- Added the possibility to `bypass mocked APIs` used within GTest
+- Added compatibility with `Clang`
+- Changed the usage of Win32 APIs in the library core from direct usage to runtime dynamic linking
+- Disabled optimization for sensitive code sections
+- Fixed `LNK1169`: one or more multiply defined symbols found (for an old function pointer)
+
 ## Version 1.1.0 (29 August 2023)
 - Added support for functions with 9-13 parameters
 - Added `REAL_MODULE_FUNC` macro
@@ -252,18 +259,18 @@ Here are some examples of library usage: [gmock-win32-sample](https://github.com
 
 ## Old versions:
 
-### Version 1.0.4 (19 March 2023)
+#### Version 1.0.4 (19 March 2023)
 - Added support for googletest v1.11.0 / v1.12.1 / v1.13.0
 
-### Version 1.0.3 (14 March 2023)
+#### Version 1.0.3 (14 March 2023)
 - Added `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro
 - Added `RESTORE_MODULE_FUNC` macro
 
-### Version 1.0.2 (12 March 2023)
+#### Version 1.0.2 (12 March 2023)
 - Added support of new `MOCK_*` macro, which no longer requires you to specify the argument count in the name
 
-### Version 1.0.1 (10 March 2023)
+#### Version 1.0.1 (10 March 2023)
 - Added support of delegating calls to a real function via `INVOKE_REAL_MODULE_FUNC` macro
 
-### Version 1.0.0 (08 March 2023)
+#### Version 1.0.0 (08 March 2023)
 - Initial public release
