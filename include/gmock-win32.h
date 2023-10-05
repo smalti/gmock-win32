@@ -82,11 +82,16 @@ struct mock_module_##func \
         static ::testing::NiceMock< mock_module_##func > obj; \
         return obj; \
     } \
+    static void** ppOldFn() \
+    { \
+        static void* oldFn_ = nullptr; \
+        return &oldFn_; \
+    } \
     static GMOCK_RESULT_(tn, __VA_ARGS__) ct stub() \
     { \
         if (gmock_win32::detail::lock) \
         { \
-            return reinterpret_cast< decltype(&stub) >(mock_module_##func::oldFn_)(); \
+            return reinterpret_cast< decltype(&stub) >(*ppOldFn())(); \
         } \
         else \
         { \
@@ -94,8 +99,7 @@ struct mock_module_##func \
             return instance().func(); \
         } \
     } \
-    static void* oldFn_; \
-}; void* mock_module_##func::oldFn_ = nullptr;
+};
 
 #define MOCK_MODULE_FUNC0(m, ...) MOCK_MODULE_FUNC0_(, , , m, __VA_ARGS__)
 #define MOCK_MODULE_FUNC0_CALLCONV(ct, m, ...) MOCK_MODULE_FUNC0_(, , ct, m, __VA_ARGS__)
@@ -976,23 +980,23 @@ struct mock_module_##func \
 #define MOCK_MODULE_FUNC_OVERLOAD(name, ...) MOCK_MODULE_UNITE(MOCK_MODULE_OVERLOAD(name, MOCK_MODULE_NBARG(__VA_ARGS__)), (__VA_ARGS__))
 
 #define MOCK_MODULE_AVOID_OPT(m) \
-	__pragma(optimize("", on)) \
-	static void patchModuleFunc_##m() { \
-		::patchModuleFunc_( &mock_module_##m::oldFn_, &::m, &mock_module_##m::stub ); \
-	} \
-	__pragma(optimize("", off))
+    __pragma(optimize("", on)) \
+    static void patchModuleFunc_##m() { \
+        ::patchModuleFunc_(mock_module_##m::ppOldFn(), &::m, &mock_module_##m::stub); \
+    } \
+    __pragma(optimize("", off))
 
 #define MOCK_MODULE_FUNC(r, m, ...) \
-	MOCK_MODULE_OVERLOAD( MOCK_MODULE_NBARG(__VA_ARGS__), , (m, r(__VA_ARGS__)) ) \
-	MOCK_MODULE_AVOID_OPT( m )
+    MOCK_MODULE_OVERLOAD( MOCK_MODULE_NBARG(__VA_ARGS__), , (m, r(__VA_ARGS__)) ) \
+    MOCK_MODULE_AVOID_OPT( m )
 
 #define MOCK_CDECL_FUNC(r, m, ...) \
-	MOCK_MODULE_OVERLOAD( MOCK_MODULE_NBARG(__VA_ARGS__), _CDECL_CONV, (m, r(__VA_ARGS__)) ) \
-	MOCK_MODULE_AVOID_OPT( m )
+    MOCK_MODULE_OVERLOAD( MOCK_MODULE_NBARG(__VA_ARGS__), _CDECL_CONV, (m, r(__VA_ARGS__)) ) \
+    MOCK_MODULE_AVOID_OPT( m )
 
 #define MOCK_STDCALL_FUNC(r, m, ...) \
-	MOCK_MODULE_OVERLOAD( MOCK_MODULE_NBARG(__VA_ARGS__), _STDCALL_CONV, (m, r(__VA_ARGS__)) ) \
-	MOCK_MODULE_AVOID_OPT( m )
+    MOCK_MODULE_OVERLOAD( MOCK_MODULE_NBARG(__VA_ARGS__), _STDCALL_CONV, (m, r(__VA_ARGS__)) ) \
+    MOCK_MODULE_AVOID_OPT( m )
 
 void mockModule_patchModuleFunc   (void*, void*, void**);
 void mockModule_restoreModuleFunc (void*, void*, void**);
@@ -1022,7 +1026,7 @@ void patchModuleFunc_(void** mock_module_func_oldFn, TFunc func, TStub stub) {
             ON_CALL(mock_module_##func::instance(), func(__VA_ARGS__))))
 
 #define REAL_MODULE_FUNC(func) \
-    reinterpret_cast< decltype(&func) >(mock_module_##func::oldFn_)
+    reinterpret_cast< decltype(&func) >(*mock_module_##func::ppOldFn())
 
 #define INVOKE_REAL_MODULE_FUNC(func, ...) \
     REAL_MODULE_FUNC(func)(__VA_ARGS__)
@@ -1031,4 +1035,4 @@ void patchModuleFunc_(void** mock_module_func_oldFn, TFunc func, TStub stub) {
     ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance());
 
 #define RESTORE_MODULE_FUNC(func) \
-    ::mockModule_restoreModuleFunc(mock_module_##func::oldFn_, mock_module_##func::stub, &mock_module_##func::oldFn_)
+    ::mockModule_restoreModuleFunc(*mock_module_##func::ppOldFn(), mock_module_##func::stub, mock_module_##func::ppOldFn())
