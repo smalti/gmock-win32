@@ -261,7 +261,7 @@ Here are some examples of library usage: [gmock-win32-sample](https://github.com
 ## Version 1.1.0 (29 August 2023)
 - Added support for functions with 9-13 parameters
 - Added `REAL_MODULE_FUNC` macro
-- Fixed problem with Windows ApiSet DLL functions redirection
+- Fixed problem with Windows ApiSet DLL functions redirection (AppCompat via Shimm DLL)
 
 ## Old versions:
 
