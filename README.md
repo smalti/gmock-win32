@@ -4,6 +4,7 @@
 [![gmock-win32 license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/smalti/gmock-win32/blob/main/LICENSE)
 [![gmock-win32 version](https://img.shields.io/github/v/release/smalti/gmock-win32?label=version&color=blue)](https://github.com/smalti/gmock-win32/releases/latest)
 [![cpp-logo](https://img.shields.io/badge/C%2B%2B-v14-blue?logo=cplusplus)](https://en.wikipedia.org/wiki/C++)
+[![WindowsOs-logo](https://img.shields.io/badge/platform-windows-blue?logo=Windows)](https://en.wikipedia.org/wiki/Microsoft_Windows)
 
 Suppose there is a task to test code that relies on certain system functions. Ideally, the code should be tested against different possible results of these functions. However, creating the necessary conditions for the functions to return specific results can be challenging. For instance, simulating a lack of space when writing to a file requires a lot of effort.
 
