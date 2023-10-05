@@ -1,5 +1,11 @@
 # Overview
 
+[![gmock-win32 lib](https://img.shields.io/badge/gmock-win32-blue)](https://github.com/smalti/gmock-win32)
+[![gmock-win32 license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/smalti/gmock-win32/blob/main/LICENSE)
+[![gmock-win32 version](https://img.shields.io/github/v/release/smalti/gmock-win32?label=version&color=blue)](https://github.com/smalti/gmock-win32/releases/latest)
+[![cpp-logo](https://img.shields.io/badge/C%2B%2B-v14-blue?logo=cplusplus)](https://en.wikipedia.org/wiki/C++)
+[![WindowsOs-logo](https://img.shields.io/badge/platform-windows-blue?logo=Windows)](https://en.wikipedia.org/wiki/Microsoft_Windows)
+
 Suppose there is a task to test code that relies on certain system functions. Ideally, the code should be tested against different possible results of these functions. However, creating the necessary conditions for the functions to return specific results can be challenging. For instance, simulating a lack of space when writing to a file requires a lot of effort.
 
 To simplify this process, this library allows you to replace imported module functions, including Win32 system functions, with a stub for testing purposes using GMock. Since it is an extension of the GMock library, you can use the same actions and matchers as you normally would with GMock.
@@ -222,7 +228,7 @@ int main(int argc, char* argv[])
 # Supported Platforms
 
 * C++ Version >= 14
-* MSVC >= 2019
+* MSVC >= 2019 (v142)
 * Clang >= 12.0.0
 * Windows Client >= 10
 
@@ -245,6 +251,13 @@ Here are some examples of library usage: [gmock-win32-sample](https://github.com
 
 # Version history
 
+## Version 1.2.0 (05 October 2023)
+- Added the possibility to `bypass mocked APIs` used within GTest
+- Added compatibility with `Clang`
+- Changed the usage of Win32 APIs in the library core from direct usage to runtime dynamic linking
+- Disabled optimization for sensitive code sections
+- Fixed `LNK1169`: one or more multiply defined symbols found (for an old function pointer)
+
 ## Version 1.1.0 (29 August 2023)
 - Added support for functions with 9-13 parameters
 - Added `REAL_MODULE_FUNC` macro
@@ -252,18 +265,18 @@ Here are some examples of library usage: [gmock-win32-sample](https://github.com
 
 ## Old versions:
 
-### Version 1.0.4 (19 March 2023)
+#### Version 1.0.4 (19 March 2023)
 - Added support for googletest v1.11.0 / v1.12.1 / v1.13.0
 
-### Version 1.0.3 (14 March 2023)
+#### Version 1.0.3 (14 March 2023)
 - Added `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro
 - Added `RESTORE_MODULE_FUNC` macro
 
-### Version 1.0.2 (12 March 2023)
+#### Version 1.0.2 (12 March 2023)
 - Added support of new `MOCK_*` macro, which no longer requires you to specify the argument count in the name
 
-### Version 1.0.1 (10 March 2023)
+#### Version 1.0.1 (10 March 2023)
 - Added support of delegating calls to a real function via `INVOKE_REAL_MODULE_FUNC` macro
 
-### Version 1.0.0 (08 March 2023)
+#### Version 1.0.0 (08 March 2023)
 - Initial public release
