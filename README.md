@@ -251,7 +251,7 @@ Here are some examples of library usage: [gmock-win32-sample](https://github.com
 
 # Version history
 
-## Version 1.2.0 (** October 2023)
+## Version 1.2.0 (05 October 2023)
 - Added the possibility to `bypass mocked APIs` used within GTest
 - Added compatibility with `Clang`
 - Changed the usage of Win32 APIs in the library core from direct usage to runtime dynamic linking
