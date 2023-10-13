@@ -8,73 +8,120 @@
 #pragma warning(pop)
 
 #include <memory>
+#include <string>
 #include <stdexcept>
 
 #pragma comment(lib, "dbghelp.lib")
 
-#define RETURN_IF_FAILED(hr)            \
-do {                                    \
-    const auto hres = HRESULT{ hr };    \
-    if (FAILED(hres))                   \
-        return hres;                    \
+#define THROW_HRESULT(hr, text)                     \
+    throw std::runtime_error{                       \
+        std::string{ "message: " } + text +         \
+        "; HRESULT code: " + std::to_string(hr) };           
+
+#define THROW_ERROR_CODE(err, text)                 \
+    throw std::runtime_error{                       \
+        std::string{ "message: " } + text +         \
+        "; error code: " + std::to_string(err) };   
+
+#define RETURN_IF_FAILED_HRESULT(hr)                \
+do                                                  \
+{                                                   \
+    const auto hRes = HRESULT{ hr };                \
+    if (FAILED(hRes))                               \
+        return hRes;                                \
 } while (false)
 
+#define THROW_IF_FAILED_HRESULT(hr, text)           \
+do                                                  \
+{                                                   \
+    const auto hRes = HRESULT{ hr };                \
+    if (FAILED(hRes))                               \
+        THROW_HRESULT(hRes, text);                  \
+} while (false)   
+
 namespace {
+namespace module {
 
-	typedef DWORD (WINAPI *pfnGetLastError_t)( VOID );
-	pfnGetLastError_t g_pfnGetLastError = nullptr;
+    constexpr auto kernel32 = L"kernel32";
+    constexpr auto dbghelp  = L"dbghelp";
 
-	typedef HANDLE (WINAPI *pfnGetCurrentProcess_t)( VOID );
-	pfnGetCurrentProcess_t g_pfnGetCurrentProcess = nullptr;
+} // namespace module
 
-	typedef BOOL (WINAPI *pfnWriteProcessMemory_t)(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T* lpNumberOfBytesWritten);
-	pfnWriteProcessMemory_t g_pfnWriteProcessMemory = nullptr;
+    using UniqueHMODULE = std::unique_ptr<
+        std::remove_pointer_t< HMODULE >, BOOL(WINAPI*)(HMODULE) >;
 
-	typedef BOOL (WINAPI *pfnVirtualProtect_t)(LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpflOldProtect);
-	pfnVirtualProtect_t g_pfnVirtualProtect = nullptr;
-	
-	typedef HMODULE (WINAPI *pfnGetModuleHandleA_t)(LPCSTR lpModuleName);
-	pfnGetModuleHandleA_t g_pfnGetModuleHandleA = nullptr;
-	
-	typedef PVOID(__stdcall *pfnImageDirectoryEntryToDataEx_t)(PVOID Base, BOOLEAN MappedAsImage, USHORT DirectoryEntry, PULONG Size, PIMAGE_SECTION_HEADER *FoundHeader);
-	pfnImageDirectoryEntryToDataEx_t g_pfnImageDirectoryEntryToDataEx = nullptr;
+namespace utils {
 
-	static bool g_bInit = false;
-	bool init()
+    UniqueHMODULE loadModule(const wchar_t* moduleName)
     {
-		HMODULE module;
-		module = ::LoadLibraryA( "kernel32.dll" );
-		if ( !module ) 
-			return false;
+        if (const auto hmodule = ::LoadLibraryW(moduleName))
+            return UniqueHMODULE{ hmodule, &FreeLibrary };
+        else
+            THROW_ERROR_CODE(::GetLastError(), "gmock_win32 initialization failed");
 
-		g_pfnGetLastError = (pfnGetLastError_t)::GetProcAddress( module, "GetLastError" );
-		if ( !g_pfnGetLastError ) 
-			return false;
-		g_pfnGetCurrentProcess = (pfnGetCurrentProcess_t)::GetProcAddress( module, "GetCurrentProcess" );
-		if ( !g_pfnGetCurrentProcess ) 
-			return false;
-		g_pfnWriteProcessMemory = (pfnWriteProcessMemory_t)::GetProcAddress( module, "WriteProcessMemory" );
-		if ( !g_pfnWriteProcessMemory ) 
-			return false;
-		g_pfnVirtualProtect = (pfnVirtualProtect_t)::GetProcAddress( module, "VirtualProtect" );
-		if ( !g_pfnVirtualProtect ) 
-			return false;
-		// Doesnt matter wchar_t or char, GetModuleHandleW or GetModuleHandleA
-		g_pfnGetModuleHandleA = (pfnGetModuleHandleA_t)::GetProcAddress( module, "GetModuleHandleA" );
-		if ( !g_pfnGetModuleHandleA ) 
-			return false;
-		module = ::LoadLibraryA( "dbghelp.dll" );
-		if ( !module ) 
-			return false;
-		g_pfnImageDirectoryEntryToDataEx = (pfnImageDirectoryEntryToDataEx_t)::GetProcAddress( module, "ImageDirectoryEntryToDataEx" );
-		if ( !g_pfnImageDirectoryEntryToDataEx ) 
-			return false;
+        return UniqueHMODULE{ nullptr, { } };
+    }
 
-		g_bInit = true;
-		return true;
-	}
+} // namespace utils
 
-    LONG WINAPI InvalidReadExceptionFilter(PEXCEPTION_POINTERS /*pep*/)
+    struct LibCore
+    {
+        DWORD   (WINAPI* pfn_GetLastError)(VOID){ };
+        HANDLE  (WINAPI* pfn_GetCurrentProcess)(VOID){ };
+        BOOL    (WINAPI* pfn_WriteProcessMemory)(HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T*){ };
+        BOOL    (WINAPI* pfn_VirtualProtect)(LPVOID, SIZE_T, DWORD, PDWORD){ };
+        HMODULE (WINAPI* pfn_GetModuleHandleA)(LPCSTR){ };
+        PVOID   (WINAPI* pfn_ImageDirectoryEntryToDataEx)(PVOID, BOOLEAN, USHORT, PULONG, PIMAGE_SECTION_HEADER*){ };
+
+    public:
+        LibCore() :
+            dbghelp_ { utils::loadModule(module::dbghelp),},
+            kernel32_{ utils::loadModule(module::kernel32) }
+        {
+            setupDynLinkingFunctions();
+        }
+
+    private:
+
+#define SETUP_DYNLINK_FUNC(mod, proc) \
+    setupProcAddr(mod##_.get(), #proc, pfn_##proc); \
+    if (!pfn_##proc) \
+        THROW_ERROR_CODE(pfn_GetLastError(), "failed to setup function")
+
+#define SETUP_DYNLINK_KERNEL32_FUNC(func) SETUP_DYNLINK_FUNC(kernel32, func)
+#define SETUP_DYNLINK_DBGHELP_FUNC(func)  SETUP_DYNLINK_FUNC(dbghelp, func)
+
+        void setupDynLinkingFunctions()
+        {
+            // Kernel32
+            SETUP_DYNLINK_KERNEL32_FUNC(GetLastError);
+            SETUP_DYNLINK_KERNEL32_FUNC(GetCurrentProcess);
+            SETUP_DYNLINK_KERNEL32_FUNC(WriteProcessMemory);
+            SETUP_DYNLINK_KERNEL32_FUNC(VirtualProtect);
+            SETUP_DYNLINK_KERNEL32_FUNC(GetModuleHandleA);
+
+            // Dbghelp
+            SETUP_DYNLINK_DBGHELP_FUNC(ImageDirectoryEntryToDataEx);
+        }
+
+#undef SETUP_DYNLINK_FUNC
+#undef SETUP_DYNLINK_KERNEL32_FUNC
+#undef SETUP_DYNLINK_DBGHELP_FUNC
+
+        template< typename FuncType >
+        void setupProcAddr(const HMODULE hmodule, const char* name, FuncType& pfnProc) noexcept
+        {
+            pfnProc = reinterpret_cast< FuncType >(::GetProcAddress(hmodule, name));
+        }
+
+    private:
+        const UniqueHMODULE dbghelp_;
+        const UniqueHMODULE kernel32_;
+    };
+
+    std::unique_ptr< LibCore > core = nullptr;
+
+    LONG WINAPI invalidReadExceptionFilter(PEXCEPTION_POINTERS /*pep*/)
     {
         return EXCEPTION_EXECUTE_HANDLER;
     }
@@ -93,17 +140,17 @@ namespace {
         __try
         {
             *resultDescriptor = reinterpret_cast< PIMAGE_IMPORT_DESCRIPTOR >(
-                g_pfnImageDirectoryEntryToDataEx(
+                core->pfn_ImageDirectoryEntryToDataEx(
                     base, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize, &pFoundHeader));
         }
-        __except (InvalidReadExceptionFilter(GetExceptionInformation()))
+        __except (invalidReadExceptionFilter(GetExceptionInformation()))
         {
             // We don't patch module function in that case
             return HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND);
         }
 
         return *resultDescriptor ?
-            S_OK : HRESULT_FROM_WIN32(g_pfnGetLastError());
+            S_OK : HRESULT_FROM_WIN32(core->pfn_GetLastError());
     }
 
     HRESULT writeProcessMemory(
@@ -112,26 +159,26 @@ namespace {
         if (!address || !buffer)
             return E_INVALIDARG;
 
-        const auto processHandle = g_pfnGetCurrentProcess();
+        const auto processHandle = core->pfn_GetCurrentProcess();
 
-        if (g_pfnWriteProcessMemory(processHandle, address, buffer, size, nullptr) == 0
-            && (ERROR_NOACCESS == g_pfnGetLastError()))
+        if (core->pfn_WriteProcessMemory(processHandle, address, buffer, size, nullptr) == 0
+            && (ERROR_NOACCESS == core->pfn_GetLastError()))
         {
             DWORD oldProtect{ };
-            if (g_pfnVirtualProtect(address, size, PAGE_WRITECOPY, &oldProtect))
+            if (core->pfn_VirtualProtect(address, size, PAGE_WRITECOPY, &oldProtect))
             {               
                 std::shared_ptr< void > finalAction(nullptr, [&](auto&&...) {
-                    g_pfnVirtualProtect(address, size, oldProtect, &oldProtect);
+                    core->pfn_VirtualProtect(address, size, oldProtect, &oldProtect);
                 });
 
-                if (!g_pfnWriteProcessMemory(processHandle, address, buffer, size, nullptr))
-                    return HRESULT_FROM_WIN32(g_pfnGetLastError());
+                if (!core->pfn_WriteProcessMemory(processHandle, address, buffer, size, nullptr))
+                    return HRESULT_FROM_WIN32(core->pfn_GetLastError());
 
                 return S_OK;
             }
             else
             {
-                return HRESULT_FROM_WIN32(g_pfnGetLastError());
+                return HRESULT_FROM_WIN32(core->pfn_GetLastError());
             }
         }
         else
@@ -159,7 +206,7 @@ namespace {
             return E_INVALIDARG;
 
         PIMAGE_IMPORT_DESCRIPTOR descr{ };
-        RETURN_IF_FAILED(importDescriptor(base, &descr));
+        RETURN_IF_FAILED_HRESULT(importDescriptor(base, &descr));
 
         for (; descr->Name; ++descr)
         {
@@ -186,10 +233,10 @@ namespace {
             return E_INVALIDARG;
 
         LPVOID* ppfn = nullptr;
-        RETURN_IF_FAILED(
-            findImportProc(g_pfnGetModuleHandleA(nullptr), funcAddr, &ppfn));
+        RETURN_IF_FAILED_HRESULT(
+            findImportProc(core->pfn_GetModuleHandleA(nullptr), funcAddr, &ppfn));
 
-        RETURN_IF_FAILED(
+        RETURN_IF_FAILED_HRESULT(
             writeProcessMemory(ppfn, &newFunc, sizeof(ppfn)));
 
         if (oldFunc)
@@ -204,42 +251,41 @@ namespace {
             return E_INVALIDARG;
 
         LPVOID* ppfn = nullptr;
-        RETURN_IF_FAILED(
-            findImportProc(g_pfnGetModuleHandleA(nullptr), stubFunc, &ppfn));
+        RETURN_IF_FAILED_HRESULT(
+            findImportProc(core->pfn_GetModuleHandleA(nullptr), stubFunc, &ppfn));
 
         return writeProcessMemory(ppfn, &origFunc, sizeof(ppfn));
     }
 
 } // namespace
 
-void mockModule_patchModuleFunc(
-    void* funcAddr, void* newFunc, void** oldFunc)
-{
-    if ( !g_bInit )
-        if ( !init( ) )
-            throw std::runtime_error{ "failed to initialize patcher" };
-
-    if (FAILED(patchImportFunc(funcAddr, newFunc, oldFunc)))
-        throw std::runtime_error{ "failed to patch module function" };
-}
-
-void mockModule_restoreModuleFunc(
-    void* origFunc, void* stubFunc, void** oldFunc)
-{
-    if ( !g_bInit )
-        throw std::runtime_error{ "failed in initialization order" };
-
-    if (FAILED(restoreImportFunc(origFunc, stubFunc)))
-        throw std::runtime_error{ "failed to restore module function" };
-
-    if (oldFunc)
-        *oldFunc = nullptr;
-}
-
 namespace gmock_win32 {
 namespace detail {
 
     thread_local int lock = 0;
+
+    void patch_module_func(
+        void* funcAddr, void* newFunc, void** oldFunc)
+    {
+        if (!core)
+            throw std::runtime_error{ "gmock_win32 is not initialized" };
+
+        THROW_IF_FAILED_HRESULT(patchImportFunc(
+            funcAddr, newFunc, oldFunc), "failed to patch module function");
+    }
+
+    void restore_module_func(
+        void* origFunc, void* stubFunc, void** oldFunc)
+    {
+        if (!core)
+            throw std::runtime_error{ "gmock_win32 is uninitialized" };
+
+        THROW_IF_FAILED_HRESULT(restoreImportFunc(
+            origFunc, stubFunc), "failed to restore module function");
+
+        if (oldFunc)
+            *oldFunc = nullptr;
+    }
     
     proxy_base::~proxy_base() noexcept
     {
@@ -247,6 +293,19 @@ namespace detail {
     }
 
 } // namespace detail
+
+    void initialize()
+    {
+        if (core)
+            throw std::runtime_error{ "already initialized" };
+
+        core = std::make_unique< LibCore >();
+    }
+
+    void uninitialize() noexcept
+    {
+        core.reset();
+    }
 
     bypass_mocks::bypass_mocks() noexcept
     {

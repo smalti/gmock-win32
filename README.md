@@ -27,7 +27,19 @@ The `Import Address Table` (IAT) patching technique is a documented approach tha
 
 To use the mock behavior for Win32 API (or other DLL) module functions, you'll first need to build the library. Once that's done, you can include the library `gmock-win32.h` header immediately after the `gmock/gmock.h` header in your test code. Several macros are then available to help you achieve the desired mock behavior:
 
-#### 1. Create function mocks by using `MOCK_STDCALL_FUNC` / `MOCK_CDECL_FUNC` macro (by defining them in global scope)
+#### 1. First, we need to initialize the library by using `initialize` / `uninitialize` or `init_scope` initialization wrapper. Typically, it can be done in `main` function before initializing `GTest`:
+
+```cpp
+int main(int argc, char* argv[])
+{
+    const gmock_win32::init_scope gmockWin32{ };
+
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+```
+
+#### 2. Create function mocks by using `MOCK_STDCALL_FUNC` / `MOCK_CDECL_FUNC` macro by defining them in **global scope**:
 
 Macro syntax: `MOCK_*CALLING_CONVENTION*_FUNC(Retval, FunctionName, arg1, arg2...)`:
 
@@ -36,7 +48,7 @@ MOCK_STDCALL_FUNC(DWORD, GetCurrentProcessId);
 MOCK_STDCALL_FUNC(DWORD, GetProcessIdOfThread, HANDLE);
 ```
 
-#### 2. Then setup expectations via `EXPECT_MODULE_FUNC_CALL` / `ON_MODULE_FUNC_CALL` + use GMock matchers and actions as usual
+#### 3. Then setup expectations via `EXPECT_MODULE_FUNC_CALL` / `ON_MODULE_FUNC_CALL` + use GMock matchers and actions as usual
 
 Macro syntax: `*EXPECTATION*_MODULE_FUNC_CALL(FunctionName, matchers...)`
 
@@ -52,18 +64,18 @@ ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
 ON_MODULE_FUNC_CALL(GetProcessIdOfThread, Eq(HANDLE(42))).WillByDefault(Return(1));
 ```
 
-#### 3. To validate and clear expectations after tests use the `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro (usually used for multiple tests with different expectations and can be executed as part of the test tear-down logic)
+#### 4. To validate and clear expectations after tests use the `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro (usually used for multiple tests with different expectations and can be executed as part of the test tear-down logic)
 
 ```cpp
 VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(GetCurrentProcessId);
 ```
 
-#### 4. Use the `RESTORE_MODULE_FUNC` macro to restore the original module function and remove the IAT patch after all tests finished
+#### 5. Use the `RESTORE_MODULE_FUNC` macro to restore the original module function and remove the IAT patch after all tests finished
 
 ```cpp
 RESTORE_MODULE_FUNC(GetCurrentProcessId);
 ```
-## Demonstration sample
+## Demonstration of the library API
 
 ```cpp
 #include <gmock/gmock.h>
@@ -80,6 +92,8 @@ void test()
 
 int main()
 {
+    const gmock_win32::init_scope gmockWin32{ };
+
     // Initial case: we will make actual Win32 function calls and
     // will see their real results before any GMock expectations
     // are set:
@@ -220,6 +234,8 @@ TEST(GetCurrentThreadIdTest, BaseTest)
 
 int main(int argc, char* argv[])
 {
+    const gmock_win32::init_scope gmockWin32{ };
+
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
