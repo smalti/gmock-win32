@@ -267,6 +267,12 @@ Here are some examples of library usage: [gmock-win32-sample](https://github.com
 
 # Version history
 
+## Version 1.2.1 (19 October 2023)
+- Added macro expansion for redefined Win32 functions (e.g. `GetWindowLongPtrA`)
+- Added `initialization` / `uninitialization` of the lib-core
+- Added error codes to `std::runtime_error` exceptions
+- Unified public header code style
+
 ## Version 1.2.0 (05 October 2023)
 - Added the possibility to `bypass mocked APIs` used within GTest
 - Added compatibility with `Clang`
@@ -279,20 +285,22 @@ Here are some examples of library usage: [gmock-win32-sample](https://github.com
 - Added `REAL_MODULE_FUNC` macro
 - Fixed problem with Windows ApiSet DLL functions redirection (AppCompat via Shimm DLL)
 
-## Old versions:
+<details>
+<summary>Old versions</summary>
 
-#### Version 1.0.4 (19 March 2023)
+## Version 1.0.4 (19 March 2023)
 - Added support for googletest v1.11.0 / v1.12.1 / v1.13.0
 
-#### Version 1.0.3 (14 March 2023)
+## Version 1.0.3 (14 March 2023)
 - Added `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro
 - Added `RESTORE_MODULE_FUNC` macro
 
-#### Version 1.0.2 (12 March 2023)
+## Version 1.0.2 (12 March 2023)
 - Added support of new `MOCK_*` macro, which no longer requires you to specify the argument count in the name
 
-#### Version 1.0.1 (10 March 2023)
+## Version 1.0.1 (10 March 2023)
 - Added support of delegating calls to a real function via `INVOKE_REAL_MODULE_FUNC` macro
 
-#### Version 1.0.0 (08 March 2023)
+## Version 1.0.0 (08 March 2023)
 - Initial public release
+</details>
