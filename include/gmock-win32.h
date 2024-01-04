@@ -800,8 +800,8 @@ struct mock_module_##func : \
         GMOCK_MATCHER_(tn, 11, __VA_ARGS__) gmock_a11, \
         GMOCK_MATCHER_(tn, 12, __VA_ARGS__) gmock_a12) constness \
     { \
-        GMOCK_MOCKER_(11, constness, func).RegisterOwner(this); \
-        return GMOCK_MOCKER_(11, constness, func).With( \
+        GMOCK_MOCKER_(12, constness, func).RegisterOwner(this); \
+        return GMOCK_MOCKER_(12, constness, func).With( \
             gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12); \
     } \
     mutable ::testing::FunctionMocker<__VA_ARGS__> \
