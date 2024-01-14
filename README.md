@@ -80,6 +80,7 @@ RESTORE_MODULE_FUNC(GetCurrentProcessId);
 ```cpp
 #include <gmock/gmock.h>
 #include <gmock-win32.h>
+using ::testing::Return;
 
 MOCK_STDCALL_FUNC(DWORD, GetCurrentProcessId);
 MOCK_STDCALL_FUNC(DWORD, GetProcessIdOfThread, HANDLE);
