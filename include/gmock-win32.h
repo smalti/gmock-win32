@@ -1,4 +1,5 @@
 #pragma once
+#include <utility>
 
 #ifndef GMOCK_RESULT_
 #define GMOCK_RESULT_(tn, ...) \
@@ -64,7 +65,7 @@ namespace detail {
     {
         static Derived& instance()
         {
-            static ::testing::NiceMock< Derived > obj;
+            static ::testing::template NiceMock< Derived > obj;
             return obj;
         }
 
