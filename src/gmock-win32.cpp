@@ -242,10 +242,10 @@ namespace utils {
                 }
                 else
                 {
-                    const auto pImport = rvaToVa<
+                    const auto importByName = rvaToVa<
                         IMAGE_IMPORT_BY_NAME >(base, thunk->u1.AddressOfData);
 
-                    if (utils::strcmp(funcName, LPCSTR{ pImport->Name }) == 0)
+                    if (utils::strcmp(funcName, LPCSTR{ importByName->Name }) == 0)
                     {
                         *ppfn = thunkProc(thunkIAT);
                         return S_OK;
