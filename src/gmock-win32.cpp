@@ -224,30 +224,30 @@ namespace utils {
 
         for (; descr->Name; ++descr)
         {           
-            auto pThunkIAT =
+            auto thunkIAT =
                 rvaToVa< IMAGE_THUNK_DATA >(base, descr->FirstThunk);
 
-            auto pThunk = descr->OriginalFirstThunk ?
-                rvaToVa< IMAGE_THUNK_DATA >(base, descr->OriginalFirstThunk) : pThunkIAT;
+            auto thunk = descr->OriginalFirstThunk ?
+                rvaToVa< IMAGE_THUNK_DATA >(base, descr->OriginalFirstThunk) : thunkIAT;
 
-            for (; pThunk->u1.Function; ++pThunk, ++pThunkIAT)
+            for (; thunk->u1.Function; ++thunk, ++thunkIAT)
         {
-                if (!descr->OriginalFirstThunk || pThunk->u1.Ordinal & IMAGE_ORDINAL_FLAG)
+                if (!descr->OriginalFirstThunk || thunk->u1.Ordinal & IMAGE_ORDINAL_FLAG)
             {
-                    if (*thunkProc(pThunkIAT) == funcAddr)
+                    if (*thunkProc(thunkIAT) == funcAddr)
                 {
-                        *ppfn = thunkProc(pThunkIAT);
+                        *ppfn = thunkProc(thunkIAT);
                         return S_OK;
                     }
                 }
                 else
                 {
                     const auto pImport = rvaToVa<
-                        IMAGE_IMPORT_BY_NAME >(base, pThunk->u1.AddressOfData);
+                        IMAGE_IMPORT_BY_NAME >(base, thunk->u1.AddressOfData);
 
                     if (utils::strcmp(funcName, LPCSTR{ pImport->Name }) == 0)
                     {
-                        *ppfn = thunkProc(pThunkIAT);
+                        *ppfn = thunkProc(thunkIAT);
                         return S_OK;
                     }
                 }
