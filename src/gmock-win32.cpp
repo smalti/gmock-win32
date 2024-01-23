@@ -52,6 +52,8 @@ namespace module {
 
 namespace utils {
 
+#pragma warning(push)
+#pragma warning(disable: 4702)
     UniqueHMODULE loadModule(const wchar_t* moduleName)
     {
         if (const auto hmodule = ::LoadLibraryW(moduleName))
@@ -61,6 +63,15 @@ namespace utils {
 
         return UniqueHMODULE{ nullptr, { } };
     }
+#pragma warning(pop)
+
+    int strcmp(const char* s1, const char* s2)
+    {
+        while (*s1 && (*s1 == *s2))
+            s1++, s2++;
+
+        return *(const unsigned char*)s1 - *(const unsigned char*)s2;
+    }
 
 } // namespace utils
 
@@ -69,6 +80,7 @@ namespace utils {
         DWORD   (WINAPI* pfn_GetLastError)(VOID){ };
         HANDLE  (WINAPI* pfn_GetCurrentProcess)(VOID){ };
         BOOL    (WINAPI* pfn_WriteProcessMemory)(HANDLE, LPVOID, LPCVOID, SIZE_T, SIZE_T*){ };
+        BOOL    (WINAPI* pfn_FlushInstructionCache)(HANDLE, LPCVOID, SIZE_T) { };
         BOOL    (WINAPI* pfn_VirtualProtect)(LPVOID, SIZE_T, DWORD, PDWORD){ };
         HMODULE (WINAPI* pfn_GetModuleHandleA)(LPCSTR){ };
         PVOID   (WINAPI* pfn_ImageDirectoryEntryToDataEx)(PVOID, BOOLEAN, USHORT, PULONG, PIMAGE_SECTION_HEADER*){ };
@@ -97,6 +109,7 @@ namespace utils {
             SETUP_DYNLINK_KERNEL32_FUNC(GetLastError);
             SETUP_DYNLINK_KERNEL32_FUNC(GetCurrentProcess);
             SETUP_DYNLINK_KERNEL32_FUNC(WriteProcessMemory);
+            SETUP_DYNLINK_KERNEL32_FUNC(FlushInstructionCache);
             SETUP_DYNLINK_KERNEL32_FUNC(VirtualProtect);
             SETUP_DYNLINK_KERNEL32_FUNC(GetModuleHandleA);
 
@@ -120,6 +133,12 @@ namespace utils {
     };
 
     std::unique_ptr< LibCore > core = nullptr;
+
+    template< typename Type, typename I >
+    Type* rvaToVa(const HMODULE base, const I rva) noexcept
+    {
+        return reinterpret_cast< Type* >(reinterpret_cast< PBYTE >(base) + rva);
+    }
 
     LONG WINAPI invalidReadExceptionFilter(PEXCEPTION_POINTERS /*pep*/)
     {
@@ -167,7 +186,9 @@ namespace utils {
             DWORD oldProtect{ };
             if (core->pfn_VirtualProtect(address, size, PAGE_WRITECOPY, &oldProtect))
             {               
-                std::shared_ptr< void > finalAction(nullptr, [&](auto&&...) {
+                std::shared_ptr< void > finalAction(nullptr, [&](auto&&...)
+                {
+                    core->pfn_FlushInstructionCache(processHandle, address, size);
                     core->pfn_VirtualProtect(address, size, oldProtect, &oldProtect);
                 });
 
@@ -187,36 +208,46 @@ namespace utils {
         }
     }
 
-    PIMAGE_THUNK_DATA32 thunkData(
-        const HMODULE base, const PIMAGE_IMPORT_DESCRIPTOR descr) noexcept
-    {
-        return reinterpret_cast< PIMAGE_THUNK_DATA32 >(
-            reinterpret_cast< PBYTE >(base) + descr->FirstThunk);
-    }
-
     LPVOID* thunkProc(const PIMAGE_THUNK_DATA32 data) noexcept
     {
         return reinterpret_cast< LPVOID* >(&data->u1.Function);
     }
 
     HRESULT findImportProc(
-        const HMODULE base, const PVOID funcAddr, LPVOID** ppfn) noexcept
+        const HMODULE base, const LPCSTR funcName, const PVOID funcAddr, LPVOID** ppfn) noexcept
     {
-        if (!base || !funcAddr || !ppfn)
+        if (!base || !funcName || !funcAddr || !ppfn)
             return E_INVALIDARG;
 
         PIMAGE_IMPORT_DESCRIPTOR descr{ };
         RETURN_IF_FAILED_HRESULT(importDescriptor(base, &descr));
 
         for (; descr->Name; ++descr)
+        {           
+            auto pThunkIAT =
+                rvaToVa< IMAGE_THUNK_DATA >(base, descr->FirstThunk);
+
+            auto pThunk = descr->OriginalFirstThunk ?
+                rvaToVa< IMAGE_THUNK_DATA >(base, descr->OriginalFirstThunk) : pThunkIAT;
+
+            for (; pThunk->u1.Function; ++pThunk, ++pThunkIAT)
         {
-            for (auto data = thunkData(base, descr); data->u1.Function; ++data)
+                if (!descr->OriginalFirstThunk || pThunk->u1.Ordinal & IMAGE_ORDINAL_FLAG)
             {
-                if (const auto proc = thunkProc(data))
+                    if (*thunkProc(pThunkIAT) == funcAddr)
                 {
-                    if (*proc == funcAddr)
+                        *ppfn = thunkProc(pThunkIAT);
+                        return S_OK;
+                    }
+                }
+                else
+                {
+                    const auto pImport = rvaToVa<
+                        IMAGE_IMPORT_BY_NAME >(base, pThunk->u1.AddressOfData);
+
+                    if (utils::strcmp(funcName, LPCSTR{ pImport->Name }) == 0)
                     {
-                        *ppfn = proc;
+                        *ppfn = thunkProc(pThunkIAT);
                         return S_OK;
                     }
                 }
@@ -227,14 +258,14 @@ namespace utils {
     }
 
     HRESULT patchImportFunc(
-        const PVOID funcAddr, const PVOID newFunc, PVOID* oldFunc) noexcept
+        const LPCSTR funcName, const PVOID funcAddr, const PVOID newFunc, PVOID* oldFunc) noexcept
     {
-        if (!newFunc || !funcAddr || !oldFunc)
+        if (!funcName || !funcAddr || !newFunc || !oldFunc)
             return E_INVALIDARG;
 
         LPVOID* ppfn = nullptr;
         RETURN_IF_FAILED_HRESULT(
-            findImportProc(core->pfn_GetModuleHandleA(nullptr), funcAddr, &ppfn));
+            findImportProc(core->pfn_GetModuleHandleA(nullptr), funcName, funcAddr, &ppfn));
 
         RETURN_IF_FAILED_HRESULT(
             writeProcessMemory(ppfn, &newFunc, sizeof(ppfn)));
@@ -245,14 +276,15 @@ namespace utils {
         return S_OK;
     }
 
-    HRESULT restoreImportFunc(const PVOID origFunc, const PVOID stubFunc) noexcept
+    HRESULT restoreImportFunc(
+        const LPCSTR funcName, const PVOID origFunc, const PVOID stubFunc) noexcept
     {
-        if (!origFunc || !stubFunc)
+        if (!funcName || !origFunc || !stubFunc)
             return E_INVALIDARG;
 
         LPVOID* ppfn = nullptr;
         RETURN_IF_FAILED_HRESULT(
-            findImportProc(core->pfn_GetModuleHandleA(nullptr), stubFunc, &ppfn));
+            findImportProc(core->pfn_GetModuleHandleA(nullptr), funcName, stubFunc, &ppfn));
 
         return writeProcessMemory(ppfn, &origFunc, sizeof(ppfn));
     }
@@ -265,23 +297,23 @@ namespace detail {
     thread_local int lock = 0;
 
     void patch_module_func(
-        void* funcAddr, void* newFunc, void** oldFunc)
+        const char* funcName, void* funcAddr, void* newFunc, void** oldFunc)
     {
         if (!core)
             throw std::runtime_error{ "gmock_win32 is not initialized" };
 
         THROW_IF_FAILED_HRESULT(patchImportFunc(
-            funcAddr, newFunc, oldFunc), "failed to patch module function");
+            funcName, funcAddr, newFunc, oldFunc), "failed to patch module function");
     }
 
     void restore_module_func(
-        void* origFunc, void* stubFunc, void** oldFunc)
+        const char* funcName, void* origFunc, void* stubFunc, void** oldFunc)
     {
         if (!core)
             throw std::runtime_error{ "gmock_win32 is uninitialized" };
 
         THROW_IF_FAILED_HRESULT(restoreImportFunc(
-            origFunc, stubFunc), "failed to restore module function");
+            funcName, origFunc, stubFunc), "failed to restore module function");
 
         if (oldFunc)
             *oldFunc = nullptr;

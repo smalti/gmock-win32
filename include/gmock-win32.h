@@ -75,8 +75,8 @@ namespace detail {
         }
     };
 
-    void patch_module_func   (void*, void*, void**);
-    void restore_module_func (void*, void*, void**);
+    void patch_module_func   (const char*, void*, void*, void**);
+    void restore_module_func (const char*, void*, void*, void**);
 
 } // namespace detail
 } // namespace gmock_win32
@@ -936,7 +936,7 @@ struct mock_module_##func : \
 #define MOCK_MODULE_AVOID_OPT_(m) \
     __pragma(optimize("", on)) \
     static void patch_module_func_##m() { \
-        ::patch_module_func_(mock_module_##m::pp_old_fn(), &::m, &mock_module_##m::stub); \
+        ::patch_module_func_(#m, mock_module_##m::pp_old_fn(), &::m, &mock_module_##m::stub); \
     } \
     __pragma(optimize("", off))
 
@@ -954,10 +954,10 @@ struct mock_module_##func : \
 
 // Hidden from optimizer
 template< typename TFunc, typename TStub >
-void patch_module_func_(void** old_fn, TFunc func, TStub stub) {
+void patch_module_func_(const char* func_name, void** old_fn, TFunc func, TStub stub) {
     if (!(*old_fn))
         gmock_win32::detail::patch_module_func(
-            func, reinterpret_cast< void* >(stub), old_fn);
+            func_name, func, reinterpret_cast< void* >(stub), old_fn);
 }
 
 #define MODULE_FUNC_CALL_EXPANDED_(EXPECTATION_, func, ...) \
@@ -970,7 +970,7 @@ void patch_module_func_(void** old_fn, TFunc func, TStub stub) {
     MODULE_FUNC_CALL_EXPANDED_(ON_CALL, func, __VA_ARGS__)
 
 #define MODULE_FUNC_CALL_IMPL_(EXPECTATION_, func, ...) \
-    patch_module_func_##func( ); \
+    patch_module_func_##func(); \
     ++gmock_win32::detail::lock; \
     static_cast< decltype(EXPECTATION_(mock_module_##func::instance(), \
         func(__VA_ARGS__)))& >(gmock_win32::detail::make_proxy( \
@@ -987,4 +987,4 @@ void patch_module_func_(void** old_fn, TFunc func, TStub stub) {
 
 #define RESTORE_MODULE_FUNC(func) \
     gmock_win32::detail::restore_module_func( \
-        *mock_module_##func::pp_old_fn(), mock_module_##func::stub, mock_module_##func::pp_old_fn())
+        #func, *mock_module_##func::pp_old_fn(), mock_module_##func::stub, mock_module_##func::pp_old_fn())
