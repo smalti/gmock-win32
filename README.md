@@ -80,6 +80,8 @@ RESTORE_MODULE_FUNC(GetCurrentProcessId);
 ```cpp
 #include <gmock/gmock.h>
 #include <gmock-win32.h>
+
+using ::testing::Eq;
 using ::testing::Return;
 
 MOCK_STDCALL_FUNC(DWORD, GetCurrentProcessId);
@@ -128,6 +130,7 @@ After mock expectations set:
   GetCurrentProcessId:  42
   GetProcessIdOfThread: 1
 ```
+Here are some additional examples of library usage: [gmock-win32-sample](https://github.com/smalti/gmock-win32-sample)
 
 # Advanced Topics
 
@@ -257,10 +260,6 @@ int main(int argc, char* argv[])
 * `googletest 1.12.1`
 * `googletest 1.13.0`
 * `googletest 1.14.0`
-
-# Samples
-
-Here are some examples of library usage: [gmock-win32-sample](https://github.com/smalti/gmock-win32-sample)
 
 # Related Open Source Projects
 
