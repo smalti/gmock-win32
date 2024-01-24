@@ -64,10 +64,14 @@ ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
 ON_MODULE_FUNC_CALL(GetProcessIdOfThread, Eq(HANDLE(42))).WillByDefault(Return(1));
 ```
 
-#### 4. To validate and clear expectations after tests use the `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro (usually used for multiple tests with different expectations and can be executed as part of the test tear-down logic)
+#### 4. To validate and clear expectations after tests use the `VERIFY_AND_CLEAR_MODULE_FUNC` or `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro (usually used for multiple tests with different expectations and can be executed as part of the test tear-down logic)
 
 ```cpp
+// Verifies and removes the expectations
 VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(GetCurrentProcessId);
+
+// Verifies and removes the expectations and removes the default actions set by ON_CALL
+VERIFY_AND_CLEAR_MODULE_FUNC(GetProcessIdOfThread);
 ```
 
 #### 5. Use the `RESTORE_MODULE_FUNC` macro to restore the original module function and remove the IAT patch after all tests finished
@@ -130,7 +134,8 @@ After mock expectations set:
   GetCurrentProcessId:  42
   GetProcessIdOfThread: 1
 ```
-Here are some additional examples of library usage: [gmock-win32-sample](https://github.com/smalti/gmock-win32-sample)
+
+### Here are some additional examples of library usage: [gmock-win32-sample](https://github.com/smalti/gmock-win32-sample)
 
 # Advanced Topics
 

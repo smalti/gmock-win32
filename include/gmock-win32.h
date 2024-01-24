@@ -79,6 +79,15 @@ namespace detail {
     void patch_module_func   (const char*, void*, void*, void**);
     void restore_module_func (const char*, void*, void*, void**);
 
+    template< typename TFunc, typename TStub >
+    void patch_module_func_non_optimized(
+        const char* func_name, void** old_fn, TFunc func, TStub stub)
+    {
+        if (!(*old_fn))
+            patch_module_func(
+                func_name, func, reinterpret_cast< void* >(stub), old_fn);
+    }
+
 } // namespace detail
 } // namespace gmock_win32
 
@@ -937,7 +946,8 @@ struct mock_module_##func : \
 #define MOCK_MODULE_AVOID_OPT_(m) \
     __pragma(optimize("", on)) \
     static void patch_module_func_##m() { \
-        ::patch_module_func_(#m, mock_module_##m::pp_old_fn(), &::m, &mock_module_##m::stub); \
+        gmock_win32::detail::patch_module_func_non_optimized( \
+            #m, mock_module_##m::pp_old_fn(), &::m, &mock_module_##m::stub); \
     } \
     __pragma(optimize("", off))
 
@@ -953,22 +963,7 @@ struct mock_module_##func : \
     MOCK_MODULE_OVERLOAD_( MOCK_MODULE_NBARG_(__VA_ARGS__), _STDCALL_CONV, (m, r(__VA_ARGS__)) ) \
     MOCK_MODULE_AVOID_OPT_( m )
 
-// Hidden from optimizer
-template< typename TFunc, typename TStub >
-void patch_module_func_(const char* func_name, void** old_fn, TFunc func, TStub stub) {
-    if (!(*old_fn))
-        gmock_win32::detail::patch_module_func(
-            func_name, func, reinterpret_cast< void* >(stub), old_fn);
-}
-
-#define MODULE_FUNC_CALL_EXPANDED_(EXPECTATION_, func, ...) \
-    MODULE_FUNC_CALL_IMPL_(EXPECTATION_, func, __VA_ARGS__)
-
-#define EXPECT_MODULE_FUNC_CALL(func, ...) \
-    MODULE_FUNC_CALL_EXPANDED_(EXPECT_CALL, func, __VA_ARGS__)
-
-#define ON_MODULE_FUNC_CALL(func, ...) \
-    MODULE_FUNC_CALL_EXPANDED_(ON_CALL, func, __VA_ARGS__)
+// Expectations
 
 #define MODULE_FUNC_CALL_IMPL_(EXPECTATION_, func, ...) \
     patch_module_func_##func(); \
@@ -977,15 +972,42 @@ void patch_module_func_(const char* func_name, void** old_fn, TFunc func, TStub 
         func(__VA_ARGS__)))& >(gmock_win32::detail::make_proxy( \
             EXPECTATION_(mock_module_##func::instance(), func(__VA_ARGS__))))
 
-#define REAL_MODULE_FUNC(func) \
+#define EXPECT_MODULE_FUNC_CALL(func, ...) \
+    MODULE_FUNC_CALL_IMPL_(EXPECT_CALL, func, __VA_ARGS__)
+
+#define ON_MODULE_FUNC_CALL(func, ...) \
+    MODULE_FUNC_CALL_IMPL_(ON_CALL, func, __VA_ARGS__)
+
+// Real function call
+
+#define REAL_MODULE_FUNC_IMPL_(func) \
     reinterpret_cast< decltype(&func) >(*mock_module_##func::pp_old_fn())
+
+#define REAL_MODULE_FUNC(func) \
+    REAL_MODULE_FUNC_IMPL_(func)
 
 #define INVOKE_REAL_MODULE_FUNC(func, ...) \
     REAL_MODULE_FUNC(func)(__VA_ARGS__)
 
-#define VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(func) \
-    ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance());
+// Verifying and removing expectations
 
-#define RESTORE_MODULE_FUNC(func) \
+#define VERIFY_AND_CLEAR_MODULE_FUNC_IMPL_(func) \
+    ::testing::Mock::VerifyAndClear(&mock_module_##func::instance())
+
+#define VERIFY_AND_CLEAR_MODULE_FUNC(func) \
+    VERIFY_AND_CLEAR_MODULE_FUNC_IMPL_(func)
+
+#define VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS_IMPL_(func) \
+    ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance())
+
+#define VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(func) \
+    VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS_IMPL_(func)
+
+// Functions restoring
+
+#define RESTORE_MODULE_FUNC_IMPL_(func) \
     gmock_win32::detail::restore_module_func( \
         #func, *mock_module_##func::pp_old_fn(), mock_module_##func::stub, mock_module_##func::pp_old_fn())
+
+#define RESTORE_MODULE_FUNC(func) \
+    RESTORE_MODULE_FUNC_IMPL_(func)
