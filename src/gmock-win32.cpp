@@ -232,13 +232,13 @@ namespace utils {
                 rvaToVa< IMAGE_THUNK_DATA >(base, descr->OriginalFirstThunk) : thunkIAT;
 
             for (; thunk->u1.Function; ++thunk, ++thunkIAT)
-        {
-                if (!descr->OriginalFirstThunk || thunk->u1.Ordinal & IMAGE_ORDINAL_FLAG)
             {
-                    if (*thunkProc(thunkIAT) == funcAddr)
+                if (!descr->OriginalFirstThunk || thunk->u1.Ordinal & IMAGE_ORDINAL_FLAG)
                 {
-                        *ppfn = thunkProc(thunkIAT);
-                        return S_OK;
+                    if (*thunkProc(thunkIAT) == funcAddr)
+                    {
+                            *ppfn = thunkProc(thunkIAT);
+                            return S_OK;
                     }
                 }
                 else
