@@ -188,6 +188,7 @@ namespace utils {
             {               
                 std::shared_ptr< void > finalAction(nullptr, [&](auto&&...)
                 {
+                    // Ignore all function failures
                     core->pfn_FlushInstructionCache(processHandle, address, size);
                     core->pfn_VirtualProtect(address, size, oldProtect, &oldProtect);
                 });
