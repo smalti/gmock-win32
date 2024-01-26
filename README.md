@@ -64,7 +64,9 @@ ON_MODULE_FUNC_CALL(GetCurrentProcessId).WillByDefault(Return(42));
 ON_MODULE_FUNC_CALL(GetProcessIdOfThread, Eq(HANDLE(42))).WillByDefault(Return(1));
 ```
 
-#### 4. To validate and clear expectations after tests use the `VERIFY_AND_CLEAR_MODULE_FUNC` or `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro (usually used for multiple tests with different expectations and can be executed as part of the test tear-down logic)
+#### 4. To validate and clear expectations after tests use the `VERIFY_AND_CLEAR_MODULE_FUNC` or `VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS` macro
+
+In `GMock` the expectations of a mock object are verified upon its destruction. However, since we do not destroy our objects, we must manually verify our expectations after test. In the general case, we should verify expectations after every test case, similar to how a Mock object would be destroyed. This can typically be done in the `TearDown` method:
 
 ```cpp
 // Verifies and removes the expectations
@@ -272,6 +274,13 @@ int main(int argc, char* argv[])
 
 # Version history
 
+## Version 1.2.2 (25 January 2024)
+- Added support for `Win32 API forwarding`
+- Added support for macro expansion across all macro definitions
+- Added `VERIFY_AND_CLEAR_MODULE_FUNC` macro
+- Fixed a typo related to 12 arguments
+- Fixed C++20 compilation errors and warning 4702
+
 ## Version 1.2.1 (19 October 2023)
 - Added macro expansion for redefined Win32 functions (e.g. `GetWindowLongPtrA`)
 - Added `initialization` / `uninitialization` of the lib-core
@@ -288,7 +297,7 @@ int main(int argc, char* argv[])
 ## Version 1.1.0 (29 August 2023)
 - Added support for functions with 9-13 parameters
 - Added `REAL_MODULE_FUNC` macro
-- Fixed problem with Windows ApiSet DLL functions redirection (AppCompat via Shimm DLL)
+- Fixed problem with Windows `ApiSet` DLL functions redirection (`AppCompat` via `Shimm DLL`)
 
 <details>
 <summary>Old versions</summary>
