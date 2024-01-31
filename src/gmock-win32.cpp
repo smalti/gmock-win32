@@ -209,7 +209,7 @@ namespace utils {
         }
     }
 
-    LPVOID* thunkProc(const PIMAGE_THUNK_DATA32 data) noexcept
+    LPVOID* thunkProc(const PIMAGE_THUNK_DATA data) noexcept
     {
         return reinterpret_cast< LPVOID* >(&data->u1.Function);
     }
