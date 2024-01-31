@@ -1,0 +1,113 @@
+name: tests
+on: { workflow_dispatch, push: { paths-ignore: [ 'README.md', 'LICENSE' ] } }
+# Configuration
+env:
+  strDirTests: "tests"
+  strDirGTest: "ThirdParty/googletest"
+  strFirstObj: "gmock-win32"
+  strDefaultGtestOutput: "test_detail.xml"
+jobs:
+  single-job:
+    runs-on: windows-latest
+    defaults: 
+        run:
+            working-directory: ${{ env.strDirTests }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Get version googleTestLatestRepo
+        id: gtest-tag
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: google/googletest
+          token: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: Cache googleTestLatestRepo
+        uses: actions/cache@v3
+        with:
+          path: ./${{ env.strDirTests }}/${{ env.strDirGTest }}
+          key: cache-key-gtest-${{ steps.gtest-tag.outputs.release }}
+        id: cache-gtest
+
+      - name: Download googleTestLatestRepo
+        if: steps.cache-gtest.outputs.cache-hit != 'true'
+        run: | # pwsh
+          git clone --depth 1 --branch ${{ steps.gtest-tag.outputs.release }} https://github.com/google/googletest.git "${{ env.strDirGTest }}"
+
+      - name: Build and run all tests in loop
+        run: | # pwsh
+          $arrSources = @( 
+            'main.cpp'
+            'from0ToMax.cpp' 
+          );
+          $arrLibs = @( 
+            'kernel32.lib'
+            'advapi32.lib'
+            'gdi32.lib'
+            'user32.lib'
+          );
+          
+          $pathMSBuild = vswhere -products * -requires Microsoft.Component.MSBuild -property installationPath -latest;
+          @( 'x86', 'x64' ) | % { $strArch=$_; 
+            if ( 'x64' -eq $strArch ) {
+              $path = join-path $pathMSBuild 'VC/Auxiliary/Build/vcvars64.bat';
+            }
+            else {
+              $path = join-path $pathMSBuild 'VC/Auxiliary/Build/vcvars32.bat';
+            }
+            ; # @insp https://github.com/microsoft/vswhere/wiki/Find-VC
+            cmd /s /c """$path"" $args && set" | where { $_ -match '(\w+)=(.*)' } | foreach {
+              $null = new-item -force -path "Env:\$($Matches[1])" -value $Matches[2];
+            }
+          @( 'msvc', 'llvm' ) | % { $strToolSet=$_; 
+          @( '/std:c++14', '/std:c++17', '/std:c++20' ) | % { $strCppVer=$_;
+            if ( 'msvc' -eq $strToolSet ) {
+              $exe = 'cl';
+              $building = '/MP ';
+            } elseif ( 'llvm' -eq $strToolSet ) {
+              $exe = 'clang-cl';
+              $building = '-Wno-ignored-pragma-optimize -Wno-microsoft-include -Wno-microsoft-cast -fms-compatibility -fms-extensions ';
+              if ( 'x86' -eq $strArch ) {
+                $building += " -m32 ";
+              }
+            }
+            $building += ('' +
+              " /EHsc /nologo " +
+              " $strCppVer " +
+              " /I""../include"" /I""${{ env.strDirGTest }}/googletest/include"" /I""${{ env.strDirGTest }}/googletest"" /I""${{ env.strDirGTest }}/googlemock/include"" /I""${{ env.strDirGTest }}/googlemock"" " +
+              " ""../src/${{ env.strFirstObj }}.cpp"" " +
+              " ""${{ env.strDirGTest }}/googletest/src/gtest-all.cc"" " +
+              " ""${{ env.strDirGTest }}/googlemock/src/gmock-all.cc"" " +
+              ( $arrSources -join ' ' ) +
+              " /link " +
+              ( $arrLibs -join ' ' ) +
+              " /machine:$strArch " + 
+              '')
+            echo "strArch=$strArch, strCppVer=$strCppVer, exe=$exe";
+            $process = Start-Process $exe -ArgumentList $building -Wait -NoNewWindow -PassThru;
+            echo $process.ExitCode;
+            $failures = 'undefined';
+            $errors = 'undefined';
+            if ( 0 -eq $process.ExitCode ) {
+              Start-Process "${{ env.strFirstObj }}.exe" -ArgumentList "--gtest_output=xml" -Wait;
+              [xml]$oSystem_Xml_XmlDocument = Get-Content "${{ env.strDefaultGtestOutput }}";
+              $oSystem_Xml_XmlElement = $oSystem_Xml_XmlDocument.GetElementsByTagName( 'testsuites' ).Item( 0 );
+              $failures = $oSystem_Xml_XmlElement.GetAttribute( 'failures' );
+              $errors = $oSystem_Xml_XmlElement.GetAttribute( 'errors' );
+              Remove-Item -Path "${{ env.strFirstObj }}.exe";
+              Remove-Item -Path "${{ env.strDefaultGtestOutput }}";
+            }
+            echo "gtest_failures=$failures";
+            echo "gtest_errors=$errors";
+          }
+          }
+          }
+
+      - name: If success
+        if: ${{ success( ) }}
+        run: | # pwsh
+          echo "tmp echo"
+      - name: If failure
+        if: ${{ failure( ) }}
+        run: | # pwsh
+          echo "tmp echo"
