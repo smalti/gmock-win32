@@ -7,7 +7,7 @@ env:
   strFirstObj: "gmock-win32"
   strDefaultGtestOutput: "test_detail.xml"
 jobs:
-  single-job:
+  test-in-windows:
     runs-on: windows-latest
     defaults: 
         run:
@@ -61,14 +61,21 @@ jobs:
             }
           @( 'msvc', 'llvm' ) | % { $strToolSet=$_; 
           @( '/std:c++14', '/std:c++17', '/std:c++20' ) | % { $strCppVer=$_;
+          @( 'nope', 'max' ) | % { $strOptimize=$_;
             if ( 'msvc' -eq $strToolSet ) {
               $exe = 'cl';
               $building = '/MP ';
+              if ( 'max' -eq $strOptimize ) {
+                $building += " /Gy /O2 /GL ";
+              }
             } elseif ( 'llvm' -eq $strToolSet ) {
               $exe = 'clang-cl';
               $building = '-Wno-ignored-pragma-optimize -Wno-microsoft-include -Wno-microsoft-cast -fms-compatibility -fms-extensions ';
               if ( 'x86' -eq $strArch ) {
                 $building += " -m32 ";
+              }
+              if ( 'max' -eq $strOptimize ) {
+                $building += " /Gy /O2 -flto -fuse-ld=lld ";
               }
             }
             $building += ('' +
@@ -83,7 +90,11 @@ jobs:
               ( $arrLibs -join ' ' ) +
               " /machine:$strArch " + 
               '')
-            echo "strArch=$strArch, strCppVer=$strCppVer, exe=$exe";
+            ; # for linker
+            if ( ( 'msvc' -eq $strToolSet ) -And ( 'max' -eq $strOptimize ) ) {
+              $building += " /LTCG:incremental ";
+            }
+            echo "strArch=$strArch, strCppVer=$strCppVer, strOptimize=$strOptimize, exe=$exe";
             $process = Start-Process $exe -ArgumentList $building -Wait -NoNewWindow -PassThru;
             echo $process.ExitCode;
             $failures = 'undefined';
@@ -99,6 +110,7 @@ jobs:
             }
             echo "gtest_failures=$failures";
             echo "gtest_errors=$errors";
+          }
           }
           }
           }
