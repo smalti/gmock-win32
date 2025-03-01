@@ -1,5 +1,7 @@
 #pragma once
 #include <utility>
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #ifndef GMOCK_RESULT_
 #define GMOCK_RESULT_(tn, ...) \
