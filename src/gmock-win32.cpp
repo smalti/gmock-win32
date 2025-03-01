@@ -11,6 +11,11 @@
 #include <string>
 #include <stdexcept>
 
+#ifndef _MSC_VER
+#define __try try
+#define __except(...) catch(...)
+#endif
+
 #pragma comment(lib, "dbghelp.lib")
 
 #define THROW_HRESULT(hr, text)                     \
