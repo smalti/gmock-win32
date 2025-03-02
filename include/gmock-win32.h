@@ -97,7 +97,7 @@ namespace detail {
     {
         if (!(*old_fn))
             patch_module_func(
-                func_name, func, reinterpret_cast< void* >(stub), old_fn);
+                func_name, reinterpret_cast< void* >(func), reinterpret_cast< void* >(stub), old_fn);
     }
 
 } // namespace detail
@@ -1027,7 +1027,7 @@ struct mock_module_##func : \
 
 #define RESTORE_MODULE_FUNC_IMPL_(func) \
     gmock_win32::detail::restore_module_func( \
-        #func, *mock_module_##func::pp_old_fn(), mock_module_##func::stub, mock_module_##func::pp_old_fn())
+        #func, *mock_module_##func::pp_old_fn(), reinterpret_cast<void*>(mock_module_##func::stub), mock_module_##func::pp_old_fn())
 
 #define RESTORE_MODULE_FUNC(func) \
     RESTORE_MODULE_FUNC_IMPL_(func)
