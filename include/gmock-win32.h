@@ -3,6 +3,16 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#ifdef _MSC_VER
+#define PRAGMA_UNOPTIMIZE_ON __pragma(optimize("", on))
+#define PRAGMA_UNOPTIMIZE_OFF __pragma(optimize("", off))
+#define ATTRIBUTE_UNOPTIMIZE
+#else
+#define PRAGMA_UNOPTIMIZE_ON
+#define PRAGMA_UNOPTIMIZE_OFF
+#define ATTRIBUTE_UNOPTIMIZE __attribute__((optimize("O0")))
+#endif
+
 #ifndef GMOCK_RESULT_
 #define GMOCK_RESULT_(tn, ...) \
     tn ::testing::internal::Function<__VA_ARGS__>::Result
@@ -949,12 +959,12 @@ struct mock_module_##func : \
 #define MOCK_MODULE_FUNC_OVERLOAD_(name, ...) MOCK_MODULE_UNITE_(MOCK_MODULE_OVERLOAD_(name, MOCK_MODULE_NBARG_(__VA_ARGS__)), (__VA_ARGS__))
 
 #define MOCK_MODULE_AVOID_OPT_(m) \
-    __pragma(optimize("", on)) \
-    static void patch_module_func_##m() { \
+    PRAGMA_UNOPTIMIZE_ON \
+    static void ATTRIBUTE_UNOPTIMIZE patch_module_func_##m() { \
         gmock_win32::detail::patch_module_func_non_optimized( \
             #m, mock_module_##m::pp_old_fn(), &::m, &mock_module_##m::stub); \
     } \
-    __pragma(optimize("", off))
+    PRAGMA_UNOPTIMIZE_OFF
 
 // helper to paste m and args from __VA_ARGS__ below
 #define MOCK_MODULE_FUNC_(r, m, conv, count_args, ...) \
