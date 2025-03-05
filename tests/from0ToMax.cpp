@@ -88,8 +88,8 @@ TEST(from0ToMax, args3) {
 }
 TEST(from0ToMax, args4) {
 	auto pAcl = reinterpret_cast< PACL >( INVALID_HANDLE_VALUE );
-	auto dwAceRevision = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto AccessMask = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto dwAceRevision = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto AccessMask = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto pSid = reinterpret_cast< PSID >( INVALID_HANDLE_VALUE );
 	EXPECT_MODULE_FUNC_CALL( AddAccessAllowedAce, 
 			pAcl
@@ -106,9 +106,9 @@ TEST(from0ToMax, args4) {
 }
 TEST(from0ToMax, args5) {
 	auto pAcl = reinterpret_cast< PACL >( INVALID_HANDLE_VALUE );
-	auto dwAceRevision = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto AceFlags = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto AccessMask = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto dwAceRevision = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto AceFlags = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto AccessMask = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto pSid = reinterpret_cast< PSID >( INVALID_HANDLE_VALUE );
 	EXPECT_MODULE_FUNC_CALL( AddAccessAllowedAceEx, 
 			pAcl
@@ -127,11 +127,11 @@ TEST(from0ToMax, args5) {
 }
 TEST(from0ToMax, args6) {
 	auto pAcl = reinterpret_cast< PACL >( INVALID_HANDLE_VALUE );
-	auto dwAceRevision = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto dwAccessMask = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto dwAceRevision = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto dwAccessMask = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto pSid = reinterpret_cast< PSID >( INVALID_HANDLE_VALUE );
-	auto bAuditSuccess = reinterpret_cast< BOOL >( INVALID_HANDLE_VALUE );
-	auto bAuditFailure = reinterpret_cast< BOOL >( INVALID_HANDLE_VALUE );
+	auto bAuditSuccess = static_cast< BOOL >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto bAuditFailure = static_cast< BOOL >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	EXPECT_MODULE_FUNC_CALL( AddAuditAccessAce, 
 			pAcl
 			, dwAceRevision
@@ -151,9 +151,9 @@ TEST(from0ToMax, args6) {
 }
 TEST(from0ToMax, args7) {
 	auto pAcl = reinterpret_cast< PACL >( INVALID_HANDLE_VALUE );
-	auto dwAceRevision = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto AceFlags = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto AccessMask = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto dwAceRevision = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto AceFlags = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto AccessMask = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto ObjectTypeGuid = reinterpret_cast< GUID* >( INVALID_HANDLE_VALUE );
 	auto InheritedObjectTypeGuid = reinterpret_cast< GUID* >( INVALID_HANDLE_VALUE );
 	auto pSid = reinterpret_cast< PSID >( INVALID_HANDLE_VALUE );
@@ -179,7 +179,7 @@ TEST(from0ToMax, args7) {
 TEST(from0ToMax, args8) {
 	auto pSecurityDescriptor = reinterpret_cast< PSECURITY_DESCRIPTOR >( INVALID_HANDLE_VALUE );
 	auto ClientToken = reinterpret_cast< HANDLE >( INVALID_HANDLE_VALUE );
-	auto DesiredAccess = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto DesiredAccess = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto GenericMapping = reinterpret_cast< PGENERIC_MAPPING >( INVALID_HANDLE_VALUE );
 	auto PrivilegeSet = reinterpret_cast< PPRIVILEGE_SET >( INVALID_HANDLE_VALUE );
 	auto PrivilegeSetLength = reinterpret_cast< LPDWORD >( INVALID_HANDLE_VALUE );
@@ -208,14 +208,14 @@ TEST(from0ToMax, args8) {
 }
 TEST(from0ToMax, args9) {
 	auto pAcl = reinterpret_cast< PACL >( INVALID_HANDLE_VALUE );
-	auto dwAceRevision = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto AceFlags = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto AccessMask = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto dwAceRevision = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto AceFlags = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto AccessMask = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto ObjectTypeGuid = reinterpret_cast< GUID* >( INVALID_HANDLE_VALUE );
 	auto InheritedObjectTypeGuid = reinterpret_cast< GUID* >( INVALID_HANDLE_VALUE );
 	auto pSid = reinterpret_cast< PSID >( INVALID_HANDLE_VALUE );
-	auto bAuditSuccess = reinterpret_cast< BOOL >( INVALID_HANDLE_VALUE );
-	auto bAuditFailure = reinterpret_cast< BOOL >( INVALID_HANDLE_VALUE );
+	auto bAuditSuccess = static_cast< BOOL >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto bAuditFailure = static_cast< BOOL >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	EXPECT_MODULE_FUNC_CALL( AddAuditAccessObjectAce, 
 			pAcl
 			, dwAceRevision
@@ -241,11 +241,11 @@ TEST(from0ToMax, args9) {
 }
 TEST(from0ToMax, args10) {
 	auto lpFileName = reinterpret_cast< LPCSTR >( INVALID_HANDLE_VALUE );
-	auto dwDesiredAccess = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto dwShareMode = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto dwDesiredAccess = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto dwShareMode = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto lpSecurityAttributes = reinterpret_cast< LPSECURITY_ATTRIBUTES >( INVALID_HANDLE_VALUE );
-	auto dwCreationDisposition = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto dwFlagsAndAttributes = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto dwCreationDisposition = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto dwFlagsAndAttributes = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto hTemplateFile = reinterpret_cast< HANDLE >( INVALID_HANDLE_VALUE );
 	auto hTransaction = reinterpret_cast< HANDLE >( INVALID_HANDLE_VALUE );
 	auto pusMiniVersion = reinterpret_cast< PUSHORT >( INVALID_HANDLE_VALUE );
@@ -279,9 +279,9 @@ TEST(from0ToMax, args11) {
 	auto pSecurityDescriptor = reinterpret_cast< PSECURITY_DESCRIPTOR >( INVALID_HANDLE_VALUE );
 	auto PrincipalSelfSid = reinterpret_cast< PSID >( INVALID_HANDLE_VALUE );
 	auto ClientToken = reinterpret_cast< HANDLE >( INVALID_HANDLE_VALUE );
-	auto DesiredAccess = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto DesiredAccess = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto ObjectTypeList = reinterpret_cast< POBJECT_TYPE_LIST >( INVALID_HANDLE_VALUE );
-	auto ObjectTypeListLength = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto ObjectTypeListLength = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto GenericMapping = reinterpret_cast< PGENERIC_MAPPING >( INVALID_HANDLE_VALUE );
 	auto PrivilegeSet = reinterpret_cast< PPRIVILEGE_SET >( INVALID_HANDLE_VALUE );
 	auto PrivilegeSetLength = reinterpret_cast< LPDWORD >( INVALID_HANDLE_VALUE );
@@ -321,11 +321,11 @@ TEST(from0ToMax, args12) {
 	auto ObjectName = reinterpret_cast< LPWSTR >( INVALID_HANDLE_VALUE );
 	auto pSecurityDescriptor = reinterpret_cast< PSECURITY_DESCRIPTOR >( INVALID_HANDLE_VALUE );
 	auto ClientToken = reinterpret_cast< HANDLE >( INVALID_HANDLE_VALUE );
-	auto DesiredAccess = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto GrantedAccess = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto DesiredAccess = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto GrantedAccess = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto Privileges = reinterpret_cast< PPRIVILEGE_SET >( INVALID_HANDLE_VALUE );
-	auto ObjectCreation = reinterpret_cast< BOOL >( INVALID_HANDLE_VALUE );
-	auto AccessGranted = reinterpret_cast< BOOL >( INVALID_HANDLE_VALUE );
+	auto ObjectCreation = static_cast< BOOL >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto AccessGranted = static_cast< BOOL >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto GenerateOnClose = reinterpret_cast< LPBOOL >( INVALID_HANDLE_VALUE );
 	EXPECT_MODULE_FUNC_CALL( ObjectOpenAuditAlarmW, 
 			SubsystemName
@@ -360,10 +360,10 @@ TEST(from0ToMax, args13) {
 	auto hSCManager = reinterpret_cast< SC_HANDLE >( INVALID_HANDLE_VALUE );
 	auto lpServiceName = reinterpret_cast< LPCSTR >( INVALID_HANDLE_VALUE );
 	auto lpDisplayName = reinterpret_cast< LPCSTR >( INVALID_HANDLE_VALUE );
-	auto dwDesiredAccess = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto dwServiceType = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto dwStartType = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-	auto dwErrorControl = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+	auto dwDesiredAccess = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto dwServiceType = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto dwStartType = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+	auto dwErrorControl = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 	auto lpBinaryPathName = reinterpret_cast< LPCSTR >( INVALID_HANDLE_VALUE );
 	auto lpLoadOrderGroup = reinterpret_cast< LPCSTR >( INVALID_HANDLE_VALUE );
 	auto lpdwTagId = reinterpret_cast< LPDWORD >( INVALID_HANDLE_VALUE );
@@ -402,19 +402,19 @@ TEST(from0ToMax, args13) {
 		);
 }
 //TEST(from0ToMax, args14) {
-//	auto cHeight = reinterpret_cast< int >( INVALID_HANDLE_VALUE );
-//	auto cWidth = reinterpret_cast< int >( INVALID_HANDLE_VALUE );
-//	auto cEscapement = reinterpret_cast< int >( INVALID_HANDLE_VALUE );
-//	auto cOrientation = reinterpret_cast< int >( INVALID_HANDLE_VALUE );
-//	auto cWeight = reinterpret_cast< int >( INVALID_HANDLE_VALUE );
-//	auto bItalic = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-//	auto bUnderline = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-//	auto bStrikeOut = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-//	auto iCharSet = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-//	auto iOutPrecision = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-//	auto iClipPrecision = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-//	auto iQuality = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
-//	auto iPitchAndFamily = reinterpret_cast< DWORD >( INVALID_HANDLE_VALUE );
+//	auto cHeight = static_cast< int >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto cWidth = static_cast< int >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto cEscapement = static_cast< int >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto cOrientation = static_cast< int >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto cWeight = static_cast< int >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto bItalic = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto bUnderline = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto bStrikeOut = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto iCharSet = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto iOutPrecision = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto iClipPrecision = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto iQuality = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
+//	auto iPitchAndFamily = static_cast< DWORD >( reinterpret_cast< ULONG_PTR >( INVALID_HANDLE_VALUE ) );
 //	auto pszFaceName = reinterpret_cast< LPCSTR >( INVALID_HANDLE_VALUE );
 //	EXPECT_MODULE_FUNC_CALL( CreateFontA, 
 //			cHeight
