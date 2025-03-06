@@ -932,11 +932,14 @@ struct mock_module_##func : \
 #define MOCK_MODULE_EXPAND_(x) x
 #define MOCK_MODULE_UNITE_(x, y) x y
 #define MOCK_MODULE_CONCAT_(x, y) x##y
+#define MOCK_MODULE_FIRST_(first, ...) first
+#define MOCK_MODULE_REST_(first, ...) __VA_ARGS__
 
 #define MOCK_MODULE_PREFIX_(...) 0, ##__VA_ARGS__
 #define MOCK_MODULE_LASTOF15_(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, ...)  o
 #define MOCK_MODULE_SUB_NBARG_(...) MOCK_MODULE_EXPAND_(MOCK_MODULE_LASTOF15_(__VA_ARGS__, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
 #define MOCK_MODULE_NBARG_(...) MOCK_MODULE_SUB_NBARG_(MOCK_MODULE_PREFIX_(__VA_ARGS__))
+#define MOCK_MODULE_NBARG_MINUS1_(...) MOCK_MODULE_SUB_NBARG_(__VA_ARGS__)
 
 // Expand before concatenate
 #define MOCK_MODULE_MAKENAME_(count_args, conv) MOCK_MODULE_FUNC##count_args##conv##_
@@ -951,17 +954,22 @@ struct mock_module_##func : \
     } \
     __pragma(optimize("", off))
 
-#define MOCK_MODULE_FUNC(r, m, ...) \
-    MOCK_MODULE_OVERLOAD_( MOCK_MODULE_NBARG_(__VA_ARGS__), , (m, r(__VA_ARGS__)) ) \
+// helper to paste m and args from __VA_ARGS__ below
+#define MOCK_MODULE_FUNC_(r, m, conv, count_args, ...) \
+    MOCK_MODULE_OVERLOAD_( count_args, conv, (m, r(__VA_ARGS__)) ) \
     MOCK_MODULE_AVOID_OPT_( m )
 
-#define MOCK_CDECL_FUNC(r, m, ...) \
-    MOCK_MODULE_OVERLOAD_( MOCK_MODULE_NBARG_(__VA_ARGS__), _CDECL_CONV, (m, r(__VA_ARGS__)) ) \
-    MOCK_MODULE_AVOID_OPT_( m )
+/// Create mock for a function by passing return_type, name[, arg_types...]
+#define MOCK_MODULE_FUNC(r, ...) \
+    MOCK_MODULE_FUNC_(r, MOCK_MODULE_FIRST_(__VA_ARGS__), , MOCK_MODULE_NBARG_MINUS1_(__VA_ARGS__), MOCK_MODULE_REST_(__VA_ARGS__))
 
-#define MOCK_STDCALL_FUNC(r, m, ...) \
-    MOCK_MODULE_OVERLOAD_( MOCK_MODULE_NBARG_(__VA_ARGS__), _STDCALL_CONV, (m, r(__VA_ARGS__)) ) \
-    MOCK_MODULE_AVOID_OPT_( m )
+/// Create mock for a cdecl function by passing return_type, name[, arg_types...]
+#define MOCK_CDECL_FUNC(r, ...) \
+    MOCK_MODULE_FUNC_(r, MOCK_MODULE_FIRST_(__VA_ARGS__), _CDECL_CONV, MOCK_MODULE_NBARG_MINUS1_(__VA_ARGS__), MOCK_MODULE_REST_(__VA_ARGS__))
+
+/// Create mock for a stdcall function by passing return_type, name[, arg_types...]
+#define MOCK_STDCALL_FUNC(r, ...) \
+    MOCK_MODULE_FUNC_(r, MOCK_MODULE_FIRST_(__VA_ARGS__), _STDCALL_CONV, MOCK_MODULE_NBARG_MINUS1_(__VA_ARGS__), MOCK_MODULE_REST_(__VA_ARGS__))
 
 // Expectations
 
