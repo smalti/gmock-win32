@@ -259,6 +259,7 @@ int main(int argc, char* argv[])
 * MSVC >= 2019 (v142)
 * Clang >= 12.0.0
 * Windows Client >= 10
+* GCC (MSYS2) >= 14.1
 
 # Tested with GTest
 
