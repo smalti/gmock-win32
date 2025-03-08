@@ -26,7 +26,7 @@ The `Import Address Table` (IAT) patching technique is a documented approach tha
 
 # Basic Concepts
 
-To use the mock behavior for Win32 API (or other DLL) module functions, you'll first need to build the library. Once that's done, you can include the library `gmock-win32.h` header immediately after the `gmock/gmock.h` header in your test code. Several macros are then available to help you achieve the desired mock behavior:
+To use the mock behavior for Win32 API (or other DLL) module functions, you'll first need to build the library. Once that's done, you can include the library `gmock-win32.h` header in your test code. Several macros are then available to help you achieve the desired mock behavior:
 
 #### 1. First, we need to initialize the library by using `initialize` / `uninitialize` or `init_scope` initialization wrapper. Typically, it can be done in `main` function before initializing `GTest`:
 
