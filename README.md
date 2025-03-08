@@ -85,7 +85,6 @@ RESTORE_MODULE_FUNC(GetCurrentProcessId);
 ## Demonstration of the library API
 
 ```cpp
-#include <gmock/gmock.h>
 #include <gmock-win32.h>
 
 using ::testing::Eq;
@@ -192,7 +191,6 @@ However, it's important to note that you do not need to manually suppress mocks 
 ## Mocks bypassing example:
 
 ```cpp
-#include <gmock/gmock.h>
 #include <gmock-win32.h>
 
 // There's no need to take any action to suppress mocks during
