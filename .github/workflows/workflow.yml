@@ -123,3 +123,24 @@ jobs:
         if: ${{ failure( ) }}
         run: | # pwsh
           echo "tmp echo"
+
+  test-msys2:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: ${{ env.strDirTests }}
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          pacboy: >-
+            toolchain:p
+            gtest:p
+
+      - name: Build and run tests
+        run: |
+          g++ -std=c++17 -o test *.cpp ../src/*.cpp -I../include -lgtest -lgmock -lgdi32
+          ./test

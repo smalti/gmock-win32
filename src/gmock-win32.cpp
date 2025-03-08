@@ -2,16 +2,24 @@
 
 #include <windows.h>
 
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4091)
 #include <dbghelp.h>
 #pragma warning(pop)
+#pragma comment(lib, "dbghelp.lib")
+#else
+#include <dbghelp.h>
+#endif
 
 #include <memory>
 #include <string>
 #include <stdexcept>
 
-#pragma comment(lib, "dbghelp.lib")
+#ifndef _MSC_VER
+#define __try try
+#define __except(...) catch(...)
+#endif
 
 #define THROW_HRESULT(hr, text)                     \
     throw std::runtime_error{                       \
@@ -52,8 +60,10 @@ namespace module {
 
 namespace utils {
 
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4702)
+#endif
     UniqueHMODULE loadModule(const wchar_t* moduleName)
     {
         if (const auto hmodule = ::LoadLibraryW(moduleName))
@@ -63,7 +73,9 @@ namespace utils {
 
         return UniqueHMODULE{ nullptr, { } };
     }
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
     int strcmp(const char* s1, const char* s2) noexcept
     {
