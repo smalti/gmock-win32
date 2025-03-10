@@ -86,6 +86,17 @@ namespace detail {
             static void* oldFn = nullptr;
             return &oldFn;
         }
+
+        static bool& has_expectations()
+        {
+            static thread_local bool value = false;
+            return value;
+        }
+
+        static void set_expectations(bool value)
+        {
+            has_expectations() = value;
+        }
     };
 
     void patch_module_func   (const char*, void*, void*, void**);
@@ -130,7 +141,7 @@ struct mock_module_##func : \
         GMOCK_MOCKER_(0, constness, func); \
     static GMOCK_RESULT_(tn, __VA_ARGS__) ct stub() \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())(); \
         } \
@@ -171,7 +182,7 @@ struct mock_module_##func : \
     static GMOCK_RESULT_(tn, __VA_ARGS__) ct stub( \
         GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1); \
@@ -217,7 +228,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 1, __VA_ARGS__) gmock_a1, \
         GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2); \
@@ -266,7 +277,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 2, __VA_ARGS__) gmock_a2, \
         GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3); \
@@ -318,7 +329,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 3, __VA_ARGS__) gmock_a3, \
         GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3, gmock_a4); \
@@ -373,7 +384,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 4, __VA_ARGS__) gmock_a4, \
         GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5); \
@@ -431,7 +442,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 5, __VA_ARGS__) gmock_a5, \
         GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6); \
@@ -492,7 +503,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 6, __VA_ARGS__) gmock_a6, \
         GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7); \
@@ -556,7 +567,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 7, __VA_ARGS__) gmock_a7, \
         GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8); \
@@ -623,7 +634,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 8, __VA_ARGS__) gmock_a8, \
         GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9); \
@@ -693,7 +704,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 9, __VA_ARGS__) gmock_a9, \
         GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10); \
@@ -766,7 +777,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 10, __VA_ARGS__) gmock_a10, \
         GMOCK_ARG_(tn, 11, __VA_ARGS__) gmock_a11) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11); \
@@ -842,7 +853,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 11, __VA_ARGS__) gmock_a11, \
         GMOCK_ARG_(tn, 12, __VA_ARGS__) gmock_a12) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12); \
@@ -921,7 +932,7 @@ struct mock_module_##func : \
         GMOCK_ARG_(tn, 12, __VA_ARGS__) gmock_a12, \
         GMOCK_ARG_(tn, 13, __VA_ARGS__) gmock_a13) \
     { \
-        if (gmock_win32::detail::lock) \
+        if (!has_expectations() || gmock_win32::detail::lock) \
         { \
             return reinterpret_cast< decltype(&stub) >(*pp_old_fn())( \
                 gmock_a1, gmock_a2, gmock_a3, gmock_a4, gmock_a5, gmock_a6, gmock_a7, gmock_a8, gmock_a9, gmock_a10, gmock_a11, gmock_a12, gmock_a13); \
@@ -988,6 +999,7 @@ struct mock_module_##func : \
 #define MODULE_FUNC_CALL_IMPL_(EXPECTATION_, func, ...) \
     patch_module_func_##func(); \
     ++gmock_win32::detail::lock; \
+    mock_module_##func::set_expectations(true); \
     static_cast< decltype(EXPECTATION_(mock_module_##func::instance(), \
         func(__VA_ARGS__)))& >(gmock_win32::detail::make_proxy( \
             EXPECTATION_(mock_module_##func::instance(), func(__VA_ARGS__))))
@@ -1012,12 +1024,14 @@ struct mock_module_##func : \
 // Verifying and removing expectations
 
 #define VERIFY_AND_CLEAR_MODULE_FUNC_IMPL_(func) \
+    mock_module_##func::set_expectations(false); \
     ::testing::Mock::VerifyAndClear(&mock_module_##func::instance())
 
 #define VERIFY_AND_CLEAR_MODULE_FUNC(func) \
     VERIFY_AND_CLEAR_MODULE_FUNC_IMPL_(func)
 
 #define VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS_IMPL_(func) \
+    mock_module_##func::set_expectations(false); \
     ::testing::Mock::VerifyAndClearExpectations(&mock_module_##func::instance())
 
 #define VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(func) \

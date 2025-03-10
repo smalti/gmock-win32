@@ -136,7 +136,8 @@ namespace utils {
         template< typename FuncType >
         void setupProcAddr(const HMODULE hmodule, const char* name, FuncType& pfnProc) noexcept
         {
-            pfnProc = reinterpret_cast< FuncType >(::GetProcAddress(hmodule, name));
+            pfnProc = reinterpret_cast< FuncType >(
+                reinterpret_cast< void* >(::GetProcAddress(hmodule, name)));
         }
 
     private:
