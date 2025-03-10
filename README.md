@@ -251,6 +251,10 @@ int main(int argc, char* argv[])
 }
 ```
 
+# Known Limitations
+
+`gmock-win32` is not designed to be thread-safe; therefore, all expectations must be declared in the same thread as the API calls. All API calls made from other threads will be directed to the real functions.
+
 # Supported Platforms
 
 * C++ Version >= 14
@@ -267,12 +271,20 @@ int main(int argc, char* argv[])
 * `googletest 1.12.1`
 * `googletest 1.13.0`
 * `googletest 1.14.0`
+* `googletest 1.15.0`
+* `googletest 1.15.2`
+* `googletest 1.16.0`
 
 # Related Open Source Projects
 
 [GoogleTest](https://github.com/google/googletest)
 
 # Version history
+
+## Version 1.2.3 (10 March 2025)
+- Added compatibility with `GCC (MSYS2)`
+- Fixed several compilation warnings
+- Fixed over-saturated tests due to background GTest thread
 
 ## Version 1.2.2 (25 January 2024)
 - Added support for `Win32 API forwarding`
