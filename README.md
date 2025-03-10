@@ -271,8 +271,7 @@ int main(int argc, char* argv[])
 * `googletest 1.12.1`
 * `googletest 1.13.0`
 * `googletest 1.14.0`
-* `googletest 1.15.0`
-* `googletest 1.15.2`
+* `googletest 1.15.x`
 * `googletest 1.16.0`
 
 # Related Open Source Projects
