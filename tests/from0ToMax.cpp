@@ -1,6 +1,4 @@
-﻿#include "gtest\gtest.h"
-#include "gmock\gmock.h"
-#include "gmock-win32.h"
+﻿#include "gmock-win32.h"
 #include <Windows.h>
 
 // 'reinterpret_cast': pointer truncation from 'HANDLE' to 'DWORD'
@@ -9,6 +7,23 @@
 #ifdef __clang__
 #	pragma clang diagnostic ignored "-Wvoid-pointer-to-int-cast"
 #endif // __clang__
+
+MOCK_STDCALL_FUNC(DWORD, GetCurrentThreadId);
+
+TEST(GetCurrentThreadIdTest, BypassMocks)
+{
+    ON_MODULE_FUNC_CALL(GetCurrentThreadId).WillByDefault(testing::Return(42U));
+    EXPECT_MODULE_FUNC_CALL(GetCurrentThreadId).Times(2);
+
+    const auto tid1 = ::GetCurrentThreadId();
+    const auto tid2 = ::GetCurrentThreadId();
+
+    BYPASS_MOCKS(EXPECT_EQ(tid1, 42U));
+    BYPASS_MOCKS(EXPECT_EQ(tid2, 42U));
+
+    RESTORE_MODULE_FUNC(GetCurrentThreadId);
+    VERIFY_AND_CLEAR_MODULE_FUNC_EXPECTATIONS(GetCurrentThreadId);
+}
 
 // 0
 MOCK_STDCALL_FUNC( HWINSTA, AnyPopup );
