@@ -3,6 +3,7 @@
 [![gmock-win32 lib](https://img.shields.io/badge/gmock-win32-blue)](https://github.com/smalti/gmock-win32)
 [![gmock-win32 license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/smalti/gmock-win32/blob/main/LICENSE)
 [![gmock-win32 version](https://img.shields.io/github/v/release/smalti/gmock-win32?label=version&color=blue)](https://github.com/smalti/gmock-win32/releases/latest)
+[![gmock-win32 version](https://img.shields.io/badge/version-v1.3.0-blue)](https://github.com/smalti/gmock-win32/releases/latest)
 [![cpp-logo](https://img.shields.io/badge/C%2B%2B-v14-blue?logo=cplusplus)](https://en.wikipedia.org/wiki/C++)
 [![WindowsOs-logo](https://img.shields.io/badge/platform-windows-blue?logo=Windows)](https://en.wikipedia.org/wiki/Microsoft_Windows)
 [![tests](https://github.com/smalti/gmock-win32/actions/workflows/workflow.yml/badge.svg)](https://github.com/smalti/gmock-win32/actions/workflows/workflow.yml)
